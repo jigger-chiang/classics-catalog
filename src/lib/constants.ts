@@ -2,7 +2,7 @@
  * Application constants
  */
 
-export const INITIAL_COCKTAIL_COUNT = 10;
+export const INITIAL_COCKTAIL_COUNT = 20;
 export const COCKTAILS_PER_PAGE = 10;
 export const MAX_VISIBLE_INGREDIENTS = 6;
 export const CARD_HEIGHT = 220;
