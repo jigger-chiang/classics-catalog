@@ -72,3 +72,35 @@ export function sortCocktailsByName(cocktails: Array<{ name: string }>): Array<{
   });
 }
 
+/**
+ * Generates all possible image path variations for a cocktail
+ * Tries both hyphen and underscore versions of the slug
+ */
+export function getImagePathVariations(id: string, slug: string): string[] {
+  if (!id || id.length < 3) return [];
+  
+  const idPrefix = id.slice(0, 3);
+  const slugLower = (slug || "").toLowerCase();
+  const slugWithHyphens = slugLower;
+  const slugWithUnderscores = slugLower.replace(/-/g, "_");
+  
+  const variations: string[] = [];
+  
+  // If slug already has hyphens, try hyphen version first, then underscore version
+  if (slugLower.includes("-")) {
+    variations.push(`/cocktails/${idPrefix}-${slugWithHyphens}.png`);
+    variations.push(`/cocktails/${idPrefix}-${slugWithUnderscores}.png`);
+  } 
+  // If slug has underscores, try underscore version first, then hyphen version
+  else if (slugLower.includes("_")) {
+    variations.push(`/cocktails/${idPrefix}-${slugWithUnderscores}.png`);
+    variations.push(`/cocktails/${idPrefix}-${slugWithHyphens}.png`);
+  }
+  // If slug has neither, just try the original
+  else {
+    variations.push(`/cocktails/${idPrefix}-${slugWithHyphens}.png`);
+  }
+  
+  return variations;
+}
+

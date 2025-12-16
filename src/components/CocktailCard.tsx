@@ -4,16 +4,18 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { CARD_HEIGHT, IMAGE_SIZE_PERCENTAGE, MAX_VISIBLE_INGREDIENTS } from "@/lib/constants";
 import { Cocktail } from "@/lib/google-sheets";
+import { getImagePathVariations } from "@/lib/utils";
 import { ImageOff } from "lucide-react";
 
 export function CocktailCard({ cocktail }: { cocktail: Cocktail }) {
+  const [candidateIndex, setCandidateIndex] = useState(0);
   const [imageError, setImageError] = useState(false);
-  const imageSrc = useMemo(() => {
-    if (!cocktail.id || cocktail.id.length < 3) return undefined;
-    const idPrefix = cocktail.id.slice(0, 3);
-    const slug = cocktail.slug || "";
-    return `/cocktails/${idPrefix}-${slug}.png`;
+  
+  const imageCandidates = useMemo(() => {
+    return getImagePathVariations(cocktail.id, cocktail.slug);
   }, [cocktail.id, cocktail.slug]);
+  
+  const imageSrc = imageCandidates.length > 0 ? imageCandidates[candidateIndex] : undefined;
 
   const tags = [
     cocktail.method,
@@ -38,7 +40,11 @@ export function CocktailCard({ cocktail }: { cocktail: Cocktail }) {
             loading="lazy"
             referrerPolicy="no-referrer"
             onError={() => {
-              setImageError(true);
+              if (candidateIndex < imageCandidates.length - 1) {
+                setCandidateIndex((i) => i + 1);
+              } else {
+                setImageError(true);
+              }
             }}
           />
         ) : (

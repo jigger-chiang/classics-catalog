@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useState, useMemo } from "react";
 import { Cocktail } from "@/lib/google-sheets";
+import { getImagePathVariations } from "@/lib/utils";
 import { ImageOff } from "lucide-react";
 
 export function CocktailDetailImage({ cocktail }: { cocktail: Cocktail }) {
@@ -10,13 +11,7 @@ export function CocktailDetailImage({ cocktail }: { cocktail: Cocktail }) {
   const [imageError, setImageError] = useState(false);
 
   const candidates = useMemo(() => {
-    const slug = (cocktail.slug || "placeholder").toLowerCase();
-    const slugUnderscore = slug.replace(/-/g, "_");
-    const idPrefix = cocktail.id ? `${cocktail.id}-` : "";
-    return [
-      `/cocktails/${idPrefix}${slug}.png`,
-      `/cocktails/${idPrefix}${slugUnderscore}.png`,
-    ];
+    return getImagePathVariations(cocktail.id, cocktail.slug);
   }, [cocktail.id, cocktail.slug]);
 
   const imageSrc = candidates.length > 0 ? candidates[candidateIndex] : undefined;
