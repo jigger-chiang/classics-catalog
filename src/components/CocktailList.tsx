@@ -33,8 +33,12 @@ export function CocktailList({ cocktails }: CocktailListProps) {
   return (
     <>
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-        {visibleCocktails.map((cocktail) => (
-          <CocktailCard key={cocktail.id} cocktail={cocktail} />
+        {visibleCocktails.map((cocktail, index) => (
+          <CocktailCard 
+            key={cocktail.id} 
+            cocktail={cocktail} 
+            priority={index < 2}
+          />
         ))}
       </div>
       {hasMore && (

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState, useMemo } from "react";
 import { Cocktail } from "@/lib/google-sheets";
 import { getImagePathVariations } from "@/lib/utils";
@@ -18,10 +19,13 @@ export function CocktailDetailImage({ cocktail }: { cocktail: Cocktail }) {
   return (
     <div className="relative aspect-square w-full overflow-hidden rounded-3xl bg-zinc-900">
       {!imageError && imageSrc ? (
-        <img
+        <Image
           src={imageSrc}
           alt={cocktail.name}
-          className="h-full w-full object-cover"
+          fill
+          priority
+          className="object-cover"
+          sizes="(max-width: 768px) 100vw, 50vw"
           onError={() => {
             if (candidateIndex < candidates.length - 1) {
               setCandidateIndex((i) => i + 1);

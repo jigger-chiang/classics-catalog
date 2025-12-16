@@ -1,13 +1,20 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useMemo, useState } from "react";
 import { CARD_HEIGHT, IMAGE_SIZE_PERCENTAGE, MAX_VISIBLE_INGREDIENTS } from "@/lib/constants";
 import { Cocktail } from "@/lib/google-sheets";
 import { getImagePathVariations } from "@/lib/utils";
 import { ImageOff } from "lucide-react";
 
-export function CocktailCard({ cocktail }: { cocktail: Cocktail }) {
+export function CocktailCard({ 
+  cocktail,
+  priority = false,
+}: { 
+  cocktail: Cocktail;
+  priority?: boolean;
+}) {
   const [candidateIndex, setCandidateIndex] = useState(0);
   const [imageError, setImageError] = useState(false);
   
@@ -33,12 +40,13 @@ export function CocktailCard({ cocktail }: { cocktail: Cocktail }) {
       {/* Image - Square that autoscales based on available space */}
       <div style={{ width: `${IMAGE_SIZE_PERCENTAGE}%` }} className="relative aspect-square shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-zinc-900">
         {!imageError && imageSrc ? (
-          <img
+          <Image
             src={imageSrc}
             alt={cocktail.name}
-            className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
-            loading="lazy"
-            referrerPolicy="no-referrer"
+            fill
+            priority={priority}
+            className="object-cover transition duration-500 group-hover:scale-[1.03]"
+            sizes="(max-width: 1024px) 100vw, 50vw"
             onError={() => {
               if (candidateIndex < imageCandidates.length - 1) {
                 setCandidateIndex((i) => i + 1);
