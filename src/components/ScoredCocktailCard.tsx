@@ -12,14 +12,21 @@ type ScoredCocktailCardProps = {
 
 export function ScoredCocktailCard({ recommendation }: ScoredCocktailCardProps) {
   const { cocktail, score } = recommendation;
+  const [candidateIndex, setCandidateIndex] = useState(0);
   const [imageError, setImageError] = useState(false);
   
-  const imageSrc = useMemo(() => {
-    if (!cocktail.id || cocktail.id.length < 3) return undefined;
+  const imageCandidates = useMemo(() => {
+    if (!cocktail.id || cocktail.id.length < 3) return [];
     const idPrefix = cocktail.id.slice(0, 3);
     const slug = cocktail.slug || "";
-    return `/cocktails/${idPrefix}-${slug}.png`;
+    // Try both .jpg and .jpeg extensions
+    return [
+      `/cocktails/${idPrefix}-${slug}.jpg`,
+      `/cocktails/${idPrefix}-${slug}.jpeg`,
+    ];
   }, [cocktail.id, cocktail.slug]);
+  
+  const imageSrc = imageCandidates.length > 0 ? imageCandidates[candidateIndex] : undefined;
 
   const tags = [
     cocktail.method,
@@ -49,7 +56,11 @@ export function ScoredCocktailCard({ recommendation }: ScoredCocktailCardProps) 
             loading="lazy"
             referrerPolicy="no-referrer"
             onError={() => {
-              setImageError(true);
+              if (candidateIndex < imageCandidates.length - 1) {
+                setCandidateIndex((i) => i + 1);
+              } else {
+                setImageError(true);
+              }
             }}
           />
         ) : (

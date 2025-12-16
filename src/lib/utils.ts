@@ -74,7 +74,7 @@ export function sortCocktailsByName(cocktails: Array<{ name: string }>): Array<{
 
 /**
  * Generates all possible image path variations for a cocktail
- * Tries both hyphen and underscore versions of the slug
+ * Tries both hyphen and underscore versions of the slug, and both .jpg and .jpeg extensions
  */
 export function getImagePathVariations(id: string, slug: string): string[] {
   if (!id || id.length < 3) return [];
@@ -85,20 +85,35 @@ export function getImagePathVariations(id: string, slug: string): string[] {
   const slugWithUnderscores = slugLower.replace(/-/g, "_");
   
   const variations: string[] = [];
+  const extensions = [".jpg", ".jpeg"];
   
   // If slug already has hyphens, try hyphen version first, then underscore version
   if (slugLower.includes("-")) {
-    variations.push(`/cocktails/${idPrefix}-${slugWithHyphens}.png`);
-    variations.push(`/cocktails/${idPrefix}-${slugWithUnderscores}.png`);
+    // Try hyphen versions with both extensions (jpg first)
+    extensions.forEach(ext => {
+      variations.push(`/cocktails/${idPrefix}-${slugWithHyphens}${ext}`);
+    });
+    // Then try underscore versions with both extensions
+    extensions.forEach(ext => {
+      variations.push(`/cocktails/${idPrefix}-${slugWithUnderscores}${ext}`);
+    });
   } 
   // If slug has underscores, try underscore version first, then hyphen version
   else if (slugLower.includes("_")) {
-    variations.push(`/cocktails/${idPrefix}-${slugWithUnderscores}.png`);
-    variations.push(`/cocktails/${idPrefix}-${slugWithHyphens}.png`);
+    // Try underscore versions with both extensions (jpg first)
+    extensions.forEach(ext => {
+      variations.push(`/cocktails/${idPrefix}-${slugWithUnderscores}${ext}`);
+    });
+    // Then try hyphen versions with both extensions
+    extensions.forEach(ext => {
+      variations.push(`/cocktails/${idPrefix}-${slugWithHyphens}${ext}`);
+    });
   }
-  // If slug has neither, just try the original
+  // If slug has neither, just try the original with both extensions
   else {
-    variations.push(`/cocktails/${idPrefix}-${slugWithHyphens}.png`);
+    extensions.forEach(ext => {
+      variations.push(`/cocktails/${idPrefix}-${slugWithHyphens}${ext}`);
+    });
   }
   
   return variations;
