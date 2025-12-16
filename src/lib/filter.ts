@@ -49,14 +49,6 @@ export function filterCocktails(
             ),
           );
 
-    // Glassware filter
-    const matchesGlassware =
-      !filters.glassware || filters.glassware.length === 0
-        ? true
-        : filters.glassware.some((g) =>
-            caseInsensitiveEqual(cocktail.glassware, g),
-          );
-
     // Search query filter
     const query = searchQuery?.trim();
     const matchesQuery = !query
@@ -76,7 +68,6 @@ export function filterCocktails(
       matchesBody &&
       matchesMethod &&
       matchesIngredients &&
-      matchesGlassware &&
       matchesQuery
     );
   });

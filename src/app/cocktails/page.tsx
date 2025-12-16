@@ -24,7 +24,6 @@ export default async function CocktailsPage({
     body: toArray(params.body),
     method: toArray(params.method),
     ingredients: toArray(params.ingredients),
-    glassware: toArray(params.glassware),
   };
 
   const searchQuery = toString(params.q);

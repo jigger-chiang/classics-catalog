@@ -128,7 +128,6 @@ export async function getRecommendations(relatedIds: string[]) {
 export type FilterOptions = {
   base_spirit: string[];
   ingredients: string[];
-  glassware: string[];
   method: string[];
   body_level: string[];
 };
@@ -147,7 +146,6 @@ export async function getFilterOptions(
     const options: FilterOptions = {
       base_spirit: [],
       ingredients: [],
-      glassware: [],
       method: [],
       body_level: [],
     };
@@ -158,9 +156,6 @@ export async function getFilterOptions(
       }
       if (row.ingredients?.trim()) {
         options.ingredients.push(row.ingredients.trim());
-      }
-      if (row.glassware?.trim()) {
-        options.glassware.push(row.glassware.trim());
       }
       if (row.method?.trim()) {
         options.method.push(row.method.trim());
@@ -173,7 +168,6 @@ export async function getFilterOptions(
     // Remove duplicates and sort
     options.base_spirit = Array.from(new Set(options.base_spirit)).sort();
     options.ingredients = Array.from(new Set(options.ingredients)).sort();
-    options.glassware = Array.from(new Set(options.glassware)).sort();
     options.method = Array.from(new Set(options.method)).sort();
     options.body_level = Array.from(new Set(options.body_level)).sort();
 
@@ -183,7 +177,6 @@ export async function getFilterOptions(
     return {
       base_spirit: [],
       ingredients: [],
-      glassware: [],
       method: [],
       body_level: [],
     };

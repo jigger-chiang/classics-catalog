@@ -9,7 +9,6 @@ export type Filters = {
   body?: string[];
   method?: string[];
   ingredients?: string[];
-  glassware?: string[];
 };
 
 type FilterModalProps = {
@@ -18,7 +17,6 @@ type FilterModalProps = {
     body_level: string[];
     method: string[];
     ingredients: string[];
-    glassware: string[];
   };
   initial: Filters;
   open: boolean;
@@ -30,7 +28,6 @@ const emptyFilters: Filters = {
   body: [],
   method: [],
   ingredients: [],
-  glassware: [],
 };
 
 export default function FilterModal({
@@ -45,7 +42,6 @@ export default function FilterModal({
     body: initial.body || [],
     method: initial.method || [],
     ingredients: initial.ingredients || [],
-    glassware: initial.glassware || [],
   });
 
   useEffect(() => {
@@ -54,7 +50,6 @@ export default function FilterModal({
       body: initial.body || [],
       method: initial.method || [],
       ingredients: initial.ingredients || [],
-      glassware: initial.glassware || [],
     });
   }, [initial]);
 
@@ -79,9 +74,6 @@ export default function FilterModal({
     }
     if (draft.ingredients && draft.ingredients.length > 0) {
       params.set("ingredients", draft.ingredients.join(","));
-    }
-    if (draft.glassware && draft.glassware.length > 0) {
-      params.set("glassware", draft.glassware.join(","));
     }
     const query = params.toString();
     router.replace(query ? `/cocktails?${query}` : "/cocktails", {
@@ -133,15 +125,6 @@ export default function FilterModal({
                 values={draft.method || []}
                 onChange={(method) => setDraft((d) => ({ ...d, method }))}
                 options={filterOptions.method}
-              />
-              <div className="h-px bg-white/10" />
-              <FilterButtonGroup
-                label="Glassware"
-                values={draft.glassware || []}
-                onChange={(glassware) =>
-                  setDraft((d) => ({ ...d, glassware }))
-                }
-                options={filterOptions.glassware}
               />
               <div className="h-px bg-white/10" />
               <IngredientsSelector
