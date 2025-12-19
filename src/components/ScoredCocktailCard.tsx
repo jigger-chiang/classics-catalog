@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ScoredRecommendation } from "@/lib/recommendation";
 import { CARD_HEIGHT, IMAGE_SIZE_PERCENTAGE, MAX_VISIBLE_INGREDIENTS } from "@/lib/constants";
+import { ScoreTooltip } from "@/components/ScoreTooltip";
 import { ImageOff } from "lucide-react";
 import { useMemo, useState } from "react";
 
@@ -11,7 +12,7 @@ type ScoredCocktailCardProps = {
 };
 
 export function ScoredCocktailCard({ recommendation }: ScoredCocktailCardProps) {
-  const { cocktail, score } = recommendation;
+  const { cocktail, score, breakdown } = recommendation;
   const [candidateIndex, setCandidateIndex] = useState(0);
   const [imageError, setImageError] = useState(false);
   
@@ -41,10 +42,12 @@ export function ScoredCocktailCard({ recommendation }: ScoredCocktailCardProps) 
 
   const cardContent = (
     <article style={{ height: `${CARD_HEIGHT}px` }} className="group relative flex min-w-[360px] flex-row gap-4 rounded-3xl border border-white/10 bg-gradient-to-b from-zinc-900/70 to-black p-4 shadow-2xl ring-1 ring-white/10 transition-all duration-300 ease-out hover:-translate-y-1 hover:border-white/25 hover:ring-white/25 hover:shadow-xl sm:p-5">
-      {/* Score badge */}
-      <div className="absolute right-3 top-3 z-10 rounded-full bg-amber-400/20 backdrop-blur-sm px-3 py-1 text-xs font-semibold text-amber-200 ring-1 ring-amber-400/30">
-        {score} pts
-      </div>
+      {/* Score badge with tooltip */}
+      <ScoreTooltip score={score} breakdown={breakdown}>
+        <div className="absolute right-3 top-3 z-10 cursor-help rounded-full bg-amber-400/20 backdrop-blur-sm px-3 py-1 text-xs font-semibold text-amber-200 ring-1 ring-amber-400/30 transition-all duration-200 hover:bg-amber-400/30 hover:ring-amber-400/50">
+          {score} pts
+        </div>
+      </ScoreTooltip>
 
       {/* Image - Square that autoscales based on available space */}
       <div style={{ width: `${IMAGE_SIZE_PERCENTAGE}%` }} className="relative aspect-square shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-zinc-900">

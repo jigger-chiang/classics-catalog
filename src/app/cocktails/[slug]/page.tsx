@@ -4,6 +4,7 @@ import { getHybridRecommendations } from "@/lib/recommendation";
 import { CocktailCard } from "@/components/CocktailCard";
 import { CocktailDetailImage } from "@/components/CocktailDetailImage";
 import { BackButton } from "@/components/BackButton";
+import { ScoreTooltip } from "@/components/ScoreTooltip";
 import { Playfair_Display } from "next/font/google";
 
 const playfair = Playfair_Display({
@@ -94,11 +95,18 @@ export default async function CocktailDetailPage({
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {recommendations.map((recommendation) => (
                 <div key={recommendation.cocktail.id} className="relative">
-                  {/* Score badge outside the card */}
-                  <div className="absolute -top-2 -right-2 z-10 rounded-full bg-amber-400/20 backdrop-blur-sm px-3 py-1 text-xs font-semibold text-amber-200 ring-2 ring-amber-400/30 shadow-lg">
-                    {recommendation.score} pts
-                  </div>
                   <CocktailCard cocktail={recommendation.cocktail} />
+                  {/* Score badge on the right side with tooltip */}
+                  <div className="absolute right-0 top-4 z-10">
+                    <ScoreTooltip
+                      score={recommendation.score}
+                      breakdown={recommendation.breakdown}
+                    >
+                      <div className="cursor-help rounded-full bg-amber-400/20 backdrop-blur-sm px-3 py-1.5 text-xs font-semibold text-amber-200 ring-2 ring-amber-400/30 shadow-lg transition-all duration-200 hover:bg-amber-400/30 hover:ring-amber-400/50">
+                        {recommendation.score} pts
+                      </div>
+                    </ScoreTooltip>
+                  </div>
                 </div>
               ))}
             </div>

@@ -16,20 +16,46 @@ const SCORING_WEIGHTS = {
   STRUCTURE_SYNERGY_BONUS: 40, // Bonus when method AND body_level both match (the "vibe")
   METHOD_ONLY: 5, // Method match only (if synergy not met)
   BODY_ONLY: 10, // Body match only (if synergy not met)
+  COMPLEXITY_PENALTY: 15, // Penalty for ingredient count difference >= 2
   // Note: Tags scoring can be added here when data is populated
   // TAG_MATCH: TBD, // Optional: Tags matching (future-proofing)
 } as const;
 
 /**
+ * Minimum similarity score threshold for recommendations
+ * Recommendations below this score are filtered out to ensure quality
+ * It's better to return fewer high-quality recommendations than to show irrelevant matches
+ */
+const MIN_SCORE_THRESHOLD = 50;
+
+/**
+ * Type for score breakdown items
+ */
+export type ScoreBreakdownItem = {
+  reason: string;
+  points: number;
+};
+
+/**
+ * Type for similarity score result with breakdown
+ */
+export type SimilarityScoreResult = {
+  score: number;
+  breakdown: ScoreBreakdownItem[];
+};
+
+/**
  * Calculates similarity score between two cocktails
  * Focuses on liquid composition and drinking structure, not glassware
  * Prioritizes "Cocktail Structure" over "Base Spirit"
+ * Returns both the score and a breakdown of contributing factors
  */
 export function calculateSimilarityScore(
   current: Cocktail,
   candidate: Cocktail,
-): number {
+): SimilarityScoreResult {
   let score = 0;
+  const breakdown: ScoreBreakdownItem[] = [];
 
   // Base Spirit Match: +20 points
   // Note: Reduced weight to encourage spirit exploration
@@ -38,6 +64,10 @@ export function calculateSimilarityScore(
     candidate.base_spirit.toLowerCase().trim()
   ) {
     score += SCORING_WEIGHTS.BASE_SPIRIT;
+    breakdown.push({
+      reason: "Base Spirit",
+      points: SCORING_WEIGHTS.BASE_SPIRIT,
+    });
   }
 
   // Structure Synergy Bonus: Check if method AND body_level both match
@@ -51,14 +81,38 @@ export function calculateSimilarityScore(
   if (methodMatches && bodyMatches) {
     // Structure Synergy: Both method and body match - grant high bonus
     // This is our primary way of grouping similar cocktail styles
-    score += SCORING_WEIGHTS.STRUCTURE_SYNERGY_BONUS;
+    // Special case: "Stir + Light" gets reduced bonus (too broad, covers watered-down spirits and wine-based cocktails)
+    const method = current.method.toLowerCase().trim();
+    const body = current.body_level.toLowerCase().trim();
+    if (method === "stir" && body === "light") {
+      const points = 20; // Reduced bonus for Stir + Light
+      score += points;
+      breakdown.push({
+        reason: "Structure Synergy (Stir + Light)",
+        points,
+      });
+    } else {
+      score += SCORING_WEIGHTS.STRUCTURE_SYNERGY_BONUS; // Full bonus for other combinations
+      breakdown.push({
+        reason: "Structure Synergy",
+        points: SCORING_WEIGHTS.STRUCTURE_SYNERGY_BONUS,
+      });
+    }
   } else {
     // Individual attribute matches (only if synergy not met)
     if (methodMatches) {
       score += SCORING_WEIGHTS.METHOD_ONLY;
+      breakdown.push({
+        reason: "Method Match",
+        points: SCORING_WEIGHTS.METHOD_ONLY,
+      });
     }
     if (bodyMatches) {
       score += SCORING_WEIGHTS.BODY_ONLY;
+      breakdown.push({
+        reason: "Body Level Match",
+        points: SCORING_WEIGHTS.BODY_ONLY,
+      });
     }
   }
 
@@ -79,7 +133,27 @@ export function calculateSimilarityScore(
     }
   }
 
-  score += matchingIngredients * SCORING_WEIGHTS.INGREDIENT_MATCH;
+  if (matchingIngredients > 0) {
+    const points = matchingIngredients * SCORING_WEIGHTS.INGREDIENT_MATCH;
+    score += points;
+    breakdown.push({
+      reason: `Ingredient Match x${matchingIngredients}`,
+      points,
+    });
+  }
+
+  // Complexity Penalty: Penalize large ingredient count differences
+  // A simple 2-ingredient drink is rarely a good substitute for a 4-ingredient cocktail
+  const ingredientDiff = Math.abs(
+    current.ingredients.length - candidate.ingredients.length,
+  );
+  if (ingredientDiff >= 2) {
+    score -= SCORING_WEIGHTS.COMPLEXITY_PENALTY;
+    breakdown.push({
+      reason: "Complexity Mismatch",
+      points: -SCORING_WEIGHTS.COMPLEXITY_PENALTY,
+    });
+  }
 
   // Glassware is intentionally NOT scored
   // Different glassware types should not affect similarity
@@ -90,7 +164,7 @@ export function calculateSimilarityScore(
   //   // Implement tags matching logic here
   // }
 
-  return score;
+  return { score, breakdown };
 }
 
 /**
@@ -104,10 +178,13 @@ export function getCalculatedRecommendations(
   // Filter out the current cocktail and calculate scores
   const scoredCocktails = allCocktails
     .filter((cocktail) => cocktail.id !== currentCocktail.id)
-    .map((cocktail) => ({
-      cocktail,
-      score: calculateSimilarityScore(currentCocktail, cocktail),
-    }))
+    .map((cocktail) => {
+      const scoreResult = calculateSimilarityScore(currentCocktail, cocktail);
+      return {
+        cocktail,
+        score: scoreResult.score,
+      };
+    })
     .sort((a, b) => b.score - a.score) // Sort by score descending
     .slice(0, 6) // Get top 6
     .map((item) => item.cocktail);
@@ -116,11 +193,12 @@ export function getCalculatedRecommendations(
 }
 
 /**
- * Type for recommendations with scores
+ * Type for recommendations with scores and breakdown
  */
 export type ScoredRecommendation = {
   cocktail: Cocktail;
   score: number;
+  breakdown: ScoreBreakdownItem[];
 };
 
 /**
@@ -143,10 +221,14 @@ export function getHybridRecommendations(
     const idSet = new Set(manualRelatedIds);
     const manualRecommendations = allCocktails
       .filter((cocktail) => idSet.has(cocktail.id) && !usedIds.has(cocktail.id))
-      .map((cocktail) => ({
-        cocktail,
-        score: calculateSimilarityScore(currentCocktail, cocktail),
-      }));
+      .map((cocktail) => {
+        const scoreResult = calculateSimilarityScore(currentCocktail, cocktail);
+        return {
+          cocktail,
+          score: scoreResult.score,
+          breakdown: scoreResult.breakdown,
+        };
+      });
 
     for (const rec of manualRecommendations) {
       if (result.length < 6) {
@@ -160,10 +242,14 @@ export function getHybridRecommendations(
   if (result.length < 6) {
     const calculatedRecs = allCocktails
       .filter((cocktail) => cocktail.id !== currentCocktail.id && !usedIds.has(cocktail.id))
-      .map((cocktail) => ({
-        cocktail,
-        score: calculateSimilarityScore(currentCocktail, cocktail),
-      }))
+      .map((cocktail) => {
+        const scoreResult = calculateSimilarityScore(currentCocktail, cocktail);
+        return {
+          cocktail,
+          score: scoreResult.score,
+          breakdown: scoreResult.breakdown,
+        };
+      })
       .sort((a, b) => b.score - a.score);
 
     for (const rec of calculatedRecs) {
@@ -174,6 +260,16 @@ export function getHybridRecommendations(
   }
 
   // Sort all results by score (priority) descending
-  return result.sort((a, b) => b.score - a.score);
+  const sortedResults = result.sort((a, b) => b.score - a.score);
+
+  // Apply minimum score threshold: filter out low-scoring recommendations
+  // Strict policy: do not backfill with low-scoring items even if we have fewer than 6
+  // It's better to return fewer high-quality recommendations than to show irrelevant matches
+  const filteredResults = sortedResults.filter(
+    (item) => item.score >= MIN_SCORE_THRESHOLD,
+  );
+
+  // Return top 6 (or fewer if filtered results have less)
+  return filteredResults.slice(0, 6);
 }
 
