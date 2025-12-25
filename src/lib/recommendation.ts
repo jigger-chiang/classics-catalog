@@ -1,32 +1,39 @@
 /**
- * Content-Based Recommendation System
- * Calculates cocktail similarity based on attributes and ingredients
+ * Hybrid, Content-Aware Recommendation System
+ * Zero manual tagging required - achieves "Bartender-level" accuracy through data pattern analysis
+ * Balances Manual Curation, Chemical Structure, and Ingredient Rarity with Flavor Family classification
  */
 
 import { Cocktail } from "./google-sheets";
 
 /**
- * Scoring weights for similarity calculation
- * Note: Glassware is intentionally excluded to avoid false negatives
- * (e.g., Moscow Mule in Copper Mug vs Gin Buck in Highball are structurally identical)
+ * Flavor family types
  */
-const SCORING_WEIGHTS = {
-  BASE_SPIRIT: 20, // Base spirit match - encourages exploring different spirits
-  INGREDIENT_MATCH: 20, // Per matching ingredient - shared ingredients are strong flavor bridges
-  STRUCTURE_SYNERGY_BONUS: 40, // Bonus when method AND body_level both match (the "vibe")
-  METHOD_ONLY: 5, // Method match only (if synergy not met)
-  BODY_ONLY: 10, // Body match only (if synergy not met)
-  COMPLEXITY_PENALTY: 15, // Penalty for ingredient count difference >= 2
-  // Note: Tags scoring can be added here when data is populated
-  // TAG_MATCH: TBD, // Optional: Tags matching (future-proofing)
-} as const;
+type FlavorFamily =
+  | "AMARO_APERITIF"
+  | "HERBAL_LIQUEUR"
+  | "ANISE"
+  | "CHERRY_LIQUEUR"
+  | "ORANGE_LIQUEUR"
+  | "NUT_LIQUEUR"
+  | "COFFEE_LIQUEUR"
+  | "VERMOUTH_FORTIFIED"
+  | "SWEETENER"
+  | "ACID"
+  | "BITTER"
+  | "DAIRY"
+  | "BASE_SPIRIT"
+  | "CARBONATED";
 
 /**
- * Minimum similarity score threshold for recommendations
- * Recommendations below this score are filtered out to ensure quality
- * It's better to return fewer high-quality recommendations than to show irrelevant matches
+ * Type for ingredient distribution analysis (by family)
  */
-const MIN_SCORE_THRESHOLD = 50;
+type IngredientDistribution = {
+  familyCounts: Record<FlavorFamily | string, number>;
+  totalCocktails: number;
+  rareFamilies: Set<string>; // Families appearing in < 10% of cocktails
+  commonFamilies: Set<string>; // Families appearing in >= 10% of cocktails
+};
 
 /**
  * Type for score breakdown items
@@ -45,215 +52,489 @@ export type SimilarityScoreResult = {
 };
 
 /**
- * Calculates similarity score between two cocktails
- * Focuses on liquid composition and drinking structure, not glassware
- * Prioritizes "Cocktail Structure" over "Base Spirit"
- * Returns both the score and a breakdown of contributing factors
- */
-export function calculateSimilarityScore(
-  current: Cocktail,
-  candidate: Cocktail,
-): SimilarityScoreResult {
-  let score = 0;
-  const breakdown: ScoreBreakdownItem[] = [];
-
-  // Base Spirit Match: +20 points
-  // Note: Reduced weight to encourage spirit exploration
-  if (
-    current.base_spirit.toLowerCase().trim() ===
-    candidate.base_spirit.toLowerCase().trim()
-  ) {
-    score += SCORING_WEIGHTS.BASE_SPIRIT;
-    breakdown.push({
-      reason: "Base Spirit",
-      points: SCORING_WEIGHTS.BASE_SPIRIT,
-    });
-  }
-
-  // Structure Synergy Bonus: Check if method AND body_level both match
-  // This groups similar "styles" like Spirit-Forward drinks (Stirred & Heavy)
-  const methodMatches =
-    current.method.toLowerCase().trim() === candidate.method.toLowerCase().trim();
-  const bodyMatches =
-    current.body_level.toLowerCase().trim() ===
-    candidate.body_level.toLowerCase().trim();
-
-  if (methodMatches && bodyMatches) {
-    // Structure Synergy: Both method and body match - grant high bonus
-    // This is our primary way of grouping similar cocktail styles
-    // Special case: "Stir + Light" gets reduced bonus (too broad, covers watered-down spirits and wine-based cocktails)
-    const method = current.method.toLowerCase().trim();
-    const body = current.body_level.toLowerCase().trim();
-    if (method === "stir" && body === "light") {
-      const points = 20; // Reduced bonus for Stir + Light
-      score += points;
-      breakdown.push({
-        reason: "Structure Synergy (Stir + Light)",
-        points,
-      });
-    } else {
-      score += SCORING_WEIGHTS.STRUCTURE_SYNERGY_BONUS; // Full bonus for other combinations
-      breakdown.push({
-        reason: "Structure Synergy",
-        points: SCORING_WEIGHTS.STRUCTURE_SYNERGY_BONUS,
-      });
-    }
-  } else {
-    // Individual attribute matches (only if synergy not met)
-    if (methodMatches) {
-      score += SCORING_WEIGHTS.METHOD_ONLY;
-      breakdown.push({
-        reason: "Method Match",
-        points: SCORING_WEIGHTS.METHOD_ONLY,
-      });
-    }
-    if (bodyMatches) {
-      score += SCORING_WEIGHTS.BODY_ONLY;
-      breakdown.push({
-        reason: "Body Level Match",
-        points: SCORING_WEIGHTS.BODY_ONLY,
-      });
-    }
-  }
-
-  // Ingredient Overlap: +20 points for EACH matching ingredient
-  // Shared ingredients (like Vermouth or Bitters) are strong flavor bridges
-  const currentIngredients = new Set(
-    current.ingredients.map((ing) => ing.toLowerCase().trim()),
-  );
-  const candidateIngredients = new Set(
-    candidate.ingredients.map((ing) => ing.toLowerCase().trim()),
-  );
-
-  // Count matching ingredients
-  let matchingIngredients = 0;
-  for (const ingredient of currentIngredients) {
-    if (candidateIngredients.has(ingredient)) {
-      matchingIngredients++;
-    }
-  }
-
-  if (matchingIngredients > 0) {
-    const points = matchingIngredients * SCORING_WEIGHTS.INGREDIENT_MATCH;
-    score += points;
-    breakdown.push({
-      reason: `Ingredient Match x${matchingIngredients}`,
-      points,
-    });
-  }
-
-  // Complexity Penalty: Penalize large ingredient count differences
-  // A simple 2-ingredient drink is rarely a good substitute for a 4-ingredient cocktail
-  const ingredientDiff = Math.abs(
-    current.ingredients.length - candidate.ingredients.length,
-  );
-  if (ingredientDiff >= 2) {
-    score -= SCORING_WEIGHTS.COMPLEXITY_PENALTY;
-    breakdown.push({
-      reason: "Complexity Mismatch",
-      points: -SCORING_WEIGHTS.COMPLEXITY_PENALTY,
-    });
-  }
-
-  // Glassware is intentionally NOT scored
-  // Different glassware types should not affect similarity
-  // (e.g., Moscow Mule in Copper Mug vs Gin Buck in Highball are structurally identical)
-
-  // Future-proofing: Tags scoring (optional, when data is populated)
-  // if (current.tags && candidate.tags) {
-  //   // Implement tags matching logic here
-  // }
-
-  return { score, breakdown };
-}
-
-/**
- * Gets calculated recommendations based on similarity scoring
- * Returns top 6 similar cocktails excluding the current one
- */
-export function getCalculatedRecommendations(
-  currentCocktail: Cocktail,
-  allCocktails: Cocktail[],
-): Cocktail[] {
-  // Filter out the current cocktail and calculate scores
-  const scoredCocktails = allCocktails
-    .filter((cocktail) => cocktail.id !== currentCocktail.id)
-    .map((cocktail) => {
-      const scoreResult = calculateSimilarityScore(currentCocktail, cocktail);
-      return {
-        cocktail,
-        score: scoreResult.score,
-      };
-    })
-    .sort((a, b) => b.score - a.score) // Sort by score descending
-    .slice(0, 6) // Get top 6
-    .map((item) => item.cocktail);
-
-  return scoredCocktails;
-}
-
-/**
  * Type for recommendations with scores and breakdown
  */
 export type ScoredRecommendation = {
   cocktail: Cocktail;
   score: number;
   breakdown: ScoreBreakdownItem[];
+  isManual?: boolean; // Flag to indicate manual recommendation (from related_ids)
 };
 
 /**
- * Hybrid recommendation strategy:
- * 1. First, fetch cocktails from manual related_ids
- * 2. If count < 6, fill remaining slots with algorithmic recommendations
- * 3. Exclude duplicates and ensure we return exactly up to 6 cocktails
- * 4. Returns scored recommendations sorted by priority (score descending)
+ * Minimum similarity score threshold for recommendations
+ * Recommendations below this score are filtered out to ensure quality
+ */
+const MIN_SCORE_THRESHOLD = 40; // Minimum score required for recommendations
+
+const RECOMMENDATION_COUNT = 6; // Target number of recommendations
+
+/**
+ * Step 1: The Classifier - Comprehensive ingredient family categorization
+ * Normalizes input to lowercase and categorizes ingredients by flavor profile
+ */
+function getIngredientFamily(ingredientName: string): FlavorFamily | string {
+  const normalized = ingredientName.toLowerCase().trim();
+
+  // AMARO_APERITIF (Bittersweet)
+  if (
+    normalized.includes("cynar") ||
+    normalized.includes("campari") ||
+    normalized.includes("aperol") ||
+    normalized.includes("fernet") ||
+    normalized.includes("amaro") ||
+    normalized.includes("suze") ||
+    normalized.includes("averna") ||
+    normalized.includes("montenegro") ||
+    normalized.includes("picon")
+  ) {
+    return "AMARO_APERITIF";
+  }
+
+  // HERBAL_LIQUEUR (Sweet/Complex)
+  if (
+    normalized.includes("chartreuse") ||
+    normalized.includes("benedictine") ||
+    normalized.includes("galliano") ||
+    normalized.includes("drambuie") ||
+    normalized.includes("strega")
+  ) {
+    return "HERBAL_LIQUEUR";
+  }
+
+  // ANISE (Licorice)
+  if (
+    normalized.includes("absinthe") ||
+    normalized.includes("pastis") ||
+    normalized.includes("pernod") ||
+    normalized.includes("sambuca") ||
+    normalized.includes("herbsaint")
+  ) {
+    return "ANISE";
+  }
+
+  // CHERRY_LIQUEUR
+  if (
+    normalized.includes("maraschino") ||
+    normalized.includes("cherry") ||
+    normalized.includes("heering") ||
+    normalized.includes("kirsch") ||
+    normalized.includes("luxardo")
+  ) {
+    return "CHERRY_LIQUEUR";
+  }
+
+  // ORANGE_LIQUEUR
+  if (
+    normalized.includes("cointreau") ||
+    normalized.includes("triple sec") ||
+    normalized.includes("curacao") ||
+    normalized.includes("grand marnier")
+  ) {
+    return "ORANGE_LIQUEUR";
+  }
+
+  // NUT_LIQUEUR
+  if (
+    normalized.includes("amaretto") ||
+    normalized.includes("dissarano") ||
+    normalized.includes("frangelico")
+  ) {
+    return "NUT_LIQUEUR";
+  }
+
+  // COFFEE_LIQUEUR
+  if (
+    normalized.includes("kahlua") ||
+    normalized.includes("coffee") ||
+    normalized.includes("espresso") ||
+    normalized.includes("tia maria")
+  ) {
+    return "COFFEE_LIQUEUR";
+  }
+
+  // VERMOUTH_FORTIFIED
+  if (
+    normalized.includes("vermouth") ||
+    normalized.includes("lillet") ||
+    normalized.includes("sherry") ||
+    normalized.includes("dubonnet") ||
+    normalized.includes("port") ||
+    normalized.includes("madeira") ||
+    normalized.includes("cocchi")
+  ) {
+    return "VERMOUTH_FORTIFIED";
+  }
+
+  // SWEETENER
+  if (
+    normalized.includes("sugar") ||
+    normalized.includes("syrup") ||
+    normalized.includes("honey") ||
+    normalized.includes("agave") ||
+    normalized.includes("grenadine") ||
+    normalized.includes("maple") ||
+    normalized.includes("gum")
+  ) {
+    return "SWEETENER";
+  }
+
+  // ACID
+  if (
+    normalized.includes("lemon") ||
+    normalized.includes("lime") ||
+    normalized.includes("grapefruit") ||
+    normalized.includes("yuzu")
+  ) {
+    return "ACID";
+  }
+
+  // CARBONATED
+  if (
+    normalized.includes("tonic") ||
+    normalized.includes("soda") ||
+    normalized.includes("ginger ale") ||
+    normalized.includes("ginger beer") ||
+    normalized.includes("coke") ||
+    normalized.includes("cola") ||
+    normalized.includes("sprite") ||
+    normalized.includes("7-up") ||
+    normalized.includes("7up") ||
+    normalized.includes("fanta") ||
+    normalized.includes("grapefruit soda")
+  ) {
+    return "CARBONATED";
+  }
+
+  // BITTER (for dashes only, e.g. Angostura)
+  if (normalized.includes("bitter")) {
+    return "BITTER";
+  }
+
+  // DAIRY
+  if (
+    normalized.includes("cream") ||
+    normalized.includes("milk") ||
+    normalized.includes("egg") ||
+    normalized.includes("baileys")
+  ) {
+    return "DAIRY";
+  }
+
+  // BASE_SPIRIT
+  if (
+    normalized.includes("whiskey") ||
+    normalized.includes("whisky") ||
+    normalized.includes("gin") ||
+    normalized.includes("rum") ||
+    normalized.includes("vodka") ||
+    normalized.includes("tequila") ||
+    normalized.includes("brandy") ||
+    normalized.includes("cognac") ||
+    normalized.includes("pisco") ||
+    normalized.includes("mezcal") ||
+    normalized.includes("cachaca")
+  ) {
+    return "BASE_SPIRIT";
+  }
+
+  // Default: Return the clean ingredient name if no match
+  return normalized;
+}
+
+/**
+ * Step 2: Frequency Analysis - Analyze ingredient distribution by flavor family
+ * Counts the frequency of each flavor family to determine rarity
+ */
+function analyzeIngredientDistribution(
+  allCocktails: Cocktail[],
+): IngredientDistribution {
+  const familyCounts: Record<string, number> = {};
+  const totalCocktails = allCocktails.length;
+
+  // Count occurrences of each flavor family
+  for (const cocktail of allCocktails) {
+    const familiesInCocktail = new Set<string>();
+    
+    for (const ingredient of cocktail.ingredients) {
+      const family = getIngredientFamily(ingredient);
+      familiesInCocktail.add(family);
+    }
+
+    // Count each family once per cocktail (regardless of how many ingredients match that family)
+    for (const family of familiesInCocktail) {
+      familyCounts[family] = (familyCounts[family] || 0) + 1;
+    }
+  }
+
+  // Classify families as rare (< 10%) or common (>= 10%)
+  const rareFamilies = new Set<string>();
+  const commonFamilies = new Set<string>();
+  const rarityThreshold = Math.max(1, Math.floor(totalCocktails * 0.1));
+
+  for (const [family, count] of Object.entries(familyCounts)) {
+    if (count < rarityThreshold) {
+      rareFamilies.add(family);
+    } else {
+      commonFamilies.add(family);
+    }
+  }
+
+  return {
+    familyCounts,
+    totalCocktails,
+    rareFamilies,
+    commonFamilies,
+  };
+}
+
+/**
+ * Step 3: Scoring Logic - Calculate similarity score between two cocktails
+ */
+export function calculateSimilarityScore(
+  target: Cocktail,
+  candidate: Cocktail,
+  ingredientDistribution: IngredientDistribution,
+  isManualPick: boolean = false,
+): SimilarityScoreResult {
+  let score = 0;
+  const breakdown: ScoreBreakdownItem[] = [];
+
+  // A. Manual Override
+  if (isManualPick) {
+    score = 10000;
+    breakdown.push({
+      reason: "Bartender's Choice",
+      points: 0,
+    });
+    return { score, breakdown };
+  }
+
+  // Helper: Get families for ingredients
+  const getFamilies = (cocktail: Cocktail): Set<string> => {
+    const families = new Set<string>();
+    for (const ingredient of cocktail.ingredients) {
+      families.add(getIngredientFamily(ingredient));
+    }
+    return families;
+  };
+
+  const targetFamilies = getFamilies(target);
+  const candidateFamilies = getFamilies(candidate);
+
+  // Helper: Check if a family acts as a sweet component in Sour cocktails
+  // In a Sour context, any liqueur or fortified wine acts as the balancing sweet agent
+  const isSweetComponent = (family: string): boolean => {
+    return (
+      family === "SWEETENER" ||
+      family === "ORANGE_LIQUEUR" ||
+      family === "NUT_LIQUEUR" ||
+      family === "CHERRY_LIQUEUR" ||
+      family === "HERBAL_LIQUEUR" ||
+      family === "COFFEE_LIQUEUR" ||
+      family === "AMARO_APERITIF" ||
+      family === "VERMOUTH_FORTIFIED"
+    );
+  };
+
+  // Check if cocktail has any sweet component
+  const hasSweetComponent = (families: Set<string>): boolean => {
+    for (const family of families) {
+      if (isSweetComponent(family)) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  // B. Structure Synergy (The Vibe)
+  const targetHasBaseSpirit = target.base_spirit.toLowerCase().trim().length > 0;
+  const candidateHasBaseSpirit = candidate.base_spirit.toLowerCase().trim().length > 0;
+  const targetHasAcid = targetFamilies.has("ACID");
+  const candidateHasAcid = candidateFamilies.has("ACID");
+  const targetHasSweetComponent = hasSweetComponent(targetFamilies);
+  const candidateHasSweetComponent = hasSweetComponent(candidateFamilies);
+  const targetHasCarbonated = targetFamilies.has("CARBONATED");
+  const candidateHasCarbonated = candidateFamilies.has("CARBONATED");
+
+  // Condition A: Sour/Daisy structure (Base + Acid + SweetComponent)
+  // SweetComponent includes: Sweeteners, Orange Liqueurs, Nut Liqueurs, Cherry Liqueurs,
+  // Herbal Liqueurs, Coffee Liqueurs, Amaro/Aperitifs, and Fortified Wines
+  const targetHasSourStructure =
+    targetHasBaseSpirit && targetHasAcid && targetHasSweetComponent;
+  const candidateHasSourStructure =
+    candidateHasBaseSpirit && candidateHasAcid && candidateHasSweetComponent;
+
+  // Condition B: Highball structure (Base + Carbonated)
+  const targetHasHighballStructure =
+    targetHasBaseSpirit && targetHasCarbonated;
+  const candidateHasHighballStructure =
+    candidateHasBaseSpirit && candidateHasCarbonated;
+
+  // Award points if BOTH cocktails match the same structure type
+  if (targetHasSourStructure && candidateHasSourStructure) {
+    score += 20;
+    breakdown.push({
+      reason: "Structure Synergy (Sour/Daisy)",
+      points: 20,
+    });
+  } else if (targetHasHighballStructure && candidateHasHighballStructure) {
+    score += 20;
+    breakdown.push({
+      reason: "Structure Synergy (Highball)",
+      points: 20,
+    });
+  }
+
+  // C. Ingredient Match (The Smart Logic) - Family-based matching
+  const matchedFamilies = new Set<string>();
+
+  for (const targetIngredient of target.ingredients) {
+    const targetFamily = getIngredientFamily(targetIngredient);
+
+    // Rule 1: Base Spirit Masking - Ignore BASE_SPIRIT in ingredient matching
+    if (targetFamily === "BASE_SPIRIT") {
+      continue; // Skip base spirits here (handled in Step D)
+    }
+
+    // Rule 2: Check if candidate has the same family
+    if (candidateFamilies.has(targetFamily) && !matchedFamilies.has(targetFamily)) {
+      matchedFamilies.add(targetFamily);
+
+      // Rule 3: Rarity Check - Award points based on family rarity
+      if (ingredientDistribution.rareFamilies.has(targetFamily)) {
+        // Rare family match (e.g., Cynar, Chartreuse)
+        score += 30;
+        breakdown.push({
+          reason: `Rare Family Match: ${targetFamily}`,
+          points: 30,
+        });
+      } else if (ingredientDistribution.commonFamilies.has(targetFamily)) {
+        // Common family match (e.g., Lemon, Triple Sec)
+        score += 5;
+        breakdown.push({
+          reason: `Common Family Match: ${targetFamily}`,
+          points: 5,
+        });
+      } else {
+        // Default match (not categorized as rare or common, but family matches)
+        score += 5;
+        breakdown.push({
+          reason: `Family Match: ${targetFamily}`,
+          points: 5,
+        });
+      }
+    }
+  }
+
+  // D. Base Spirit Match
+  const targetBaseNormalized = target.base_spirit.toLowerCase().trim();
+  const candidateBaseNormalized = candidate.base_spirit.toLowerCase().trim();
+
+  if (targetBaseNormalized && candidateBaseNormalized && targetBaseNormalized === candidateBaseNormalized) {
+    score += 15;
+    breakdown.push({
+      reason: "Base Spirit Match",
+      points: 15,
+    });
+  }
+
+  // E. Body Level Mismatch Penalty
+  if (
+    target.body_level.toLowerCase().trim() !==
+    candidate.body_level.toLowerCase().trim()
+  ) {
+    score -= 10;
+    breakdown.push({
+      reason: "Body Level Mismatch",
+      points: -10,
+    });
+  }
+
+  // F. Dynamic Complexity Adjustment
+  // Rewards similar complexity and penalizes disparity using a mathematical formula
+  const countA = target.ingredients.length;
+  const countB = candidate.ingredients.length;
+  const diff = Math.abs(countA - countB);
+  const complexityScore = 20 - (7 * diff);
+  
+  score += complexityScore;
+  breakdown.push({
+    reason: `Complexity Adjustment (diff: ${diff})`,
+    points: complexityScore,
+  });
+
+  return { score, breakdown };
+}
+
+/**
+ * Step 4: Hybrid Recommendation Strategy
+ * Phase 1: Manual picks from related_ids (highest priority)
+ * Phase 2: Algorithmic fill from similarity scoring
  */
 export function getHybridRecommendations(
   currentCocktail: Cocktail,
   allCocktails: Cocktail[],
   manualRelatedIds: string[],
 ): ScoredRecommendation[] {
+  // Pre-process: Analyze ingredient distribution by family
+  const ingredientDistribution = analyzeIngredientDistribution(allCocktails);
+
   const result: ScoredRecommendation[] = [];
   const usedIds = new Set<string>([currentCocktail.id]);
 
-  // Step 1: Add manually related cocktails (assign max priority score)
+  // Phase 1: Manual Picks (absolute priority)
   if (manualRelatedIds.length > 0) {
     const idSet = new Set(manualRelatedIds);
     const manualRecommendations = allCocktails
       .filter((cocktail) => idSet.has(cocktail.id) && !usedIds.has(cocktail.id))
       .map((cocktail) => {
-        const scoreResult = calculateSimilarityScore(currentCocktail, cocktail);
+        const scoreResult = calculateSimilarityScore(
+          currentCocktail,
+          cocktail,
+          ingredientDistribution,
+          true, // isManualPick = true
+        );
         return {
           cocktail,
           score: scoreResult.score,
           breakdown: scoreResult.breakdown,
+          isManual: true,
         };
       });
 
     for (const rec of manualRecommendations) {
-      if (result.length < 6) {
+      if (result.length < RECOMMENDATION_COUNT) {
         result.push(rec);
         usedIds.add(rec.cocktail.id);
       }
     }
   }
 
-  // Step 2: Fill remaining slots with algorithmic recommendations
-  if (result.length < 6) {
+  // Phase 2: Algorithmic Fill (Top Scores)
+  if (result.length < RECOMMENDATION_COUNT) {
     const calculatedRecs = allCocktails
-      .filter((cocktail) => cocktail.id !== currentCocktail.id && !usedIds.has(cocktail.id))
+      .filter(
+        (cocktail) => cocktail.id !== currentCocktail.id && !usedIds.has(cocktail.id),
+      )
       .map((cocktail) => {
-        const scoreResult = calculateSimilarityScore(currentCocktail, cocktail);
+        const scoreResult = calculateSimilarityScore(
+          currentCocktail,
+          cocktail,
+          ingredientDistribution,
+          false, // isManualPick = false
+        );
         return {
           cocktail,
           score: scoreResult.score,
           breakdown: scoreResult.breakdown,
+          isManual: false,
         };
       })
-      .sort((a, b) => b.score - a.score);
+      .sort((a, b) => b.score - a.score); // Sort by score descending
 
     for (const rec of calculatedRecs) {
-      if (result.length >= 6) break;
+      if (result.length >= RECOMMENDATION_COUNT) break;
       result.push(rec);
       usedIds.add(rec.cocktail.id);
     }
@@ -263,13 +544,42 @@ export function getHybridRecommendations(
   const sortedResults = result.sort((a, b) => b.score - a.score);
 
   // Apply minimum score threshold: filter out low-scoring recommendations
-  // Strict policy: do not backfill with low-scoring items even if we have fewer than 6
-  // It's better to return fewer high-quality recommendations than to show irrelevant matches
+  // Manual recommendations (score 10000) are always included regardless of threshold
   const filteredResults = sortedResults.filter(
-    (item) => item.score >= MIN_SCORE_THRESHOLD,
+    (item) => item.isManual || item.score >= MIN_SCORE_THRESHOLD,
   );
 
-  // Return top 6 (or fewer if filtered results have less)
-  return filteredResults.slice(0, 6);
+  return filteredResults;
 }
 
+/**
+ * Legacy function: Gets calculated recommendations based on similarity scoring
+ * Kept for backward compatibility, but uses the new scoring algorithm
+ */
+export function getCalculatedRecommendations(
+  currentCocktail: Cocktail,
+  allCocktails: Cocktail[],
+): Cocktail[] {
+  const ingredientDistribution = analyzeIngredientDistribution(allCocktails);
+
+  const scoredCocktails = allCocktails
+    .filter((cocktail) => cocktail.id !== currentCocktail.id)
+    .map((cocktail) => {
+      const scoreResult = calculateSimilarityScore(
+        currentCocktail,
+        cocktail,
+        ingredientDistribution,
+        false,
+      );
+      return {
+        cocktail,
+        score: scoreResult.score,
+      };
+    })
+    .sort((a, b) => b.score - a.score)
+    .filter((item) => item.score >= MIN_SCORE_THRESHOLD)
+    .slice(0, RECOMMENDATION_COUNT)
+    .map((item) => item.cocktail);
+
+  return scoredCocktails;
+}

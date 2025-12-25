@@ -15,7 +15,7 @@ export function NavBarAutocomplete() {
     if (pathname === "/mode") {
       return { icon: Compass, text: "Mode", subtitle: "Choose the vibe, we'll pour the list." };
     }
-    if (pathname?.startsWith("/cocktails")) {
+    if (pathname === "/cocktails") {
       return { icon: Sparkles, text: "Cocktail List" };
     }
     return null;
@@ -50,7 +50,10 @@ export function NavBarAutocomplete() {
     router.push(path);
   };
 
-  if (pathname === "/") return null;
+  // Hide on home page and cocktail detail pages (only show on list page and mode page)
+  if (pathname === "/" || (pathname?.startsWith("/cocktails/") && pathname !== "/cocktails")) {
+    return null;
+  }
 
   return (
     <nav className="sticky top-0 z-50 border-b border-white/10 bg-zinc-950/95 backdrop-blur-sm">

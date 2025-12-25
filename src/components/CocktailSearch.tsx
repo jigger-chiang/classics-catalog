@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { SlidersHorizontal } from "lucide-react";
 import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { getCocktails, type Cocktail } from "@/lib/google-sheets";
@@ -13,11 +13,19 @@ export function CocktailSearch({
   onFilterClick?: () => void;
 }) {
   const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState("");
+  const searchParams = useSearchParams();
+  const initialQuery = searchParams.get("q") || "";
+  const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [suggestions, setSuggestions] = useState<Cocktail[]>([]);
   const [cocktails, setCocktails] = useState<Cocktail[]>(initialCocktails || []);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const suggestionBox = useRef<HTMLDivElement>(null);
+
+  // Initialize search query from URL parameter when URL changes
+  useEffect(() => {
+    const queryParam = searchParams.get("q") || "";
+    setSearchQuery(queryParam);
+  }, [searchParams]);
 
   useEffect(() => {
     if (!cocktails.length && !initialCocktails?.length) {
