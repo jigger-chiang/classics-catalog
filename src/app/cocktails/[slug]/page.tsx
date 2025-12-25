@@ -19,14 +19,16 @@ export default async function CocktailDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const cocktail = await getCocktailBySlug(slug);
+  
+  // Fetch all cocktails once - this is cached
+  const allCocktails = await getCocktails();
+  
+  // Find the cocktail from the already-fetched list to avoid duplicate fetch
+  const cocktail = allCocktails.find((c) => c.slug === slug);
 
   if (!cocktail) {
     notFound();
   }
-
-  // Get all cocktails for recommendation calculation
-  const allCocktails = await getCocktails();
 
   // Use hybrid strategy: manual related_ids + algorithmic recommendations
   const recommendations = getHybridRecommendations(

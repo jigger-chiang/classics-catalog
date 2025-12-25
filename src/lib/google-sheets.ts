@@ -16,6 +16,9 @@ export type Cocktail = {
 import { DEFAULT_CSV_URL, FILTER_OPTIONS_CSV_URL } from "./constants";
 import { sortCocktailsByName } from "./utils";
 
+// Cache duration: 60 seconds
+const CACHE_REVALIDATE = 60;
+
 // Small set of rows used when the real sheet is not available yet.
 const FALLBACK_CSV = `id,name,slug,base_spirit,ingredients,body_level,method,glassware,image_url,story,related_ids
 101,Old Fashioned,old-fashioned,Whisky,\"Rye Whisky, Bitters, Sugar\",Heavy,Stir,Old Fashioned,https://images.unsplash.com/photo-1544145945-f90425340c7b,\"A timeless classic with rye, bitters, and a touch of sweetness.\",102
@@ -70,12 +73,12 @@ function parseCSV(csv: string): Cocktail[] {
 }
 
 /**
- * Fetches CSV content from a URL
+ * Fetches CSV content from a URL with caching
+ * Uses Next.js fetch caching with revalidation
  */
 async function fetchCSV(url: string): Promise<string> {
   const response = await fetch(url, { 
-    cache: "no-store",
-    next: { revalidate: 0 },
+    next: { revalidate: CACHE_REVALIDATE },
   });
   if (!response.ok) {
     throw new Error(`Failed to fetch CSV: ${response.status} ${response.statusText}`);
@@ -83,6 +86,10 @@ async function fetchCSV(url: string): Promise<string> {
   return response.text();
 }
 
+/**
+ * Get cocktails with source information
+ * Uses Next.js fetch caching (60s revalidation) - fetch automatically caches by URL
+ */
 export async function getCocktailsWithSource(
   csvUrl: string = DEFAULT_CSV_URL,
 ): Promise<CocktailsResult> {
@@ -113,7 +120,17 @@ export async function getCocktails(csvUrl: string = DEFAULT_CSV_URL) {
   return result.cocktails;
 }
 
-export async function getCocktailBySlug(slug: string) {
+/**
+ * Get a single cocktail by slug, with caching
+ * This function accepts allCocktails to avoid duplicate fetching
+ */
+export async function getCocktailBySlug(
+  slug: string,
+  allCocktails?: Cocktail[]
+): Promise<Cocktail | undefined> {
+  if (allCocktails) {
+    return allCocktails.find((cocktail) => cocktail.slug === slug);
+  }
   const cocktails = await getCocktails();
   return cocktails.find((cocktail) => cocktail.slug === slug);
 }
@@ -132,6 +149,10 @@ export type FilterOptions = {
   body_level: string[];
 };
 
+/**
+ * Get filter options
+ * Uses Next.js fetch caching (60s revalidation) - fetch automatically caches by URL
+ */
 export async function getFilterOptions(
   csvUrl: string = FILTER_OPTIONS_CSV_URL,
 ): Promise<FilterOptions> {
