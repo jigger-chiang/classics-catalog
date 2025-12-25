@@ -16,6 +16,20 @@ export function ScoreTooltip({ score, breakdown, isManual, children }: ScoreTool
   // Check if this is a manual recommendation (Bartender's Choice)
   const isManualRecommendation = isManual || breakdown.some((item) => item.reason === "Bartender's Choice");
 
+  const handleMouseEnter = () => {
+    // Only trigger on devices that support hover (desktop/mouse devices)
+    if (window.matchMedia('(hover: hover)').matches) {
+      setShowTooltip(true);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    // Only trigger on devices that support hover (desktop/mouse devices)
+    if (window.matchMedia('(hover: hover)').matches) {
+      setShowTooltip(false);
+    }
+  };
+
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -25,8 +39,8 @@ export function ScoreTooltip({ score, breakdown, isManual, children }: ScoreTool
   return (
     <div
       className="relative inline-block"
-      onMouseEnter={() => setShowTooltip(true)}
-      onMouseLeave={() => setShowTooltip(false)}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
       onClick={handleClick}
     >
       {children}
