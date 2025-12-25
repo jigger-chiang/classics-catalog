@@ -6,7 +6,6 @@ import { CocktailCard } from "@/components/CocktailCard";
 import { CocktailDetailImage } from "@/components/CocktailDetailImage";
 import { StickyBackHeader } from "@/components/StickyBackHeader";
 import { DetailPageScrollToTop } from "@/components/DetailPageScrollToTop";
-import { ScoreTooltip } from "@/components/ScoreTooltip";
 import { Playfair_Display } from "next/font/google";
 
 const playfair = Playfair_Display({
@@ -133,25 +132,13 @@ export default async function CocktailDetailPage({
               {recommendations.map((recommendation) => {
                 const isManual = recommendation.isManual || recommendation.breakdown.some((item) => item.reason === "Bartender's Choice");
                 return (
-                  <div key={recommendation.cocktail.id} className="relative">
-                    <CocktailCard cocktail={recommendation.cocktail} />
-                    {/* Score badge on the right side with tooltip */}
-                    <div className="absolute right-0 top-4 z-10">
-                      <ScoreTooltip
-                        score={recommendation.score}
-                        breakdown={recommendation.breakdown}
-                        isManual={isManual}
-                      >
-                        <div className={`cursor-help rounded-full backdrop-blur-sm px-3 py-1.5 text-xs font-semibold ring-2 shadow-lg transition-all duration-200 ${
-                          isManual
-                            ? "bg-amber-500/30 text-amber-100 ring-amber-500/50 hover:bg-amber-500/40 hover:ring-amber-500/70"
-                            : "bg-amber-400/20 text-amber-200 ring-amber-400/30 hover:bg-amber-400/30 hover:ring-amber-400/50"
-                        }`}>
-                          {isManual ? "🏆" : `${recommendation.score} pts`}
-                        </div>
-                      </ScoreTooltip>
-                    </div>
-                  </div>
+                  <CocktailCard
+                    key={recommendation.cocktail.id}
+                    cocktail={recommendation.cocktail}
+                    score={recommendation.score}
+                    breakdown={recommendation.breakdown}
+                    isManual={isManual}
+                  />
                 );
               })}
             </div>

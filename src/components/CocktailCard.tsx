@@ -7,13 +7,21 @@ import { CARD_HEIGHT, IMAGE_SIZE_PERCENTAGE, MAX_VISIBLE_INGREDIENTS } from "@/l
 import { Cocktail } from "@/lib/google-sheets";
 import { getImagePathVariations } from "@/lib/utils";
 import { ImageOff } from "lucide-react";
+import { ScoreTooltip } from "@/components/ScoreTooltip";
+import { ScoreBreakdownItem } from "@/lib/recommendation";
 
 export function CocktailCard({ 
   cocktail,
   priority = false,
+  score,
+  breakdown,
+  isManual,
 }: { 
   cocktail: Cocktail;
   priority?: boolean;
+  score?: number;
+  breakdown?: ScoreBreakdownItem[];
+  isManual?: boolean;
 }) {
   const [candidateIndex, setCandidateIndex] = useState(0);
   const [imageError, setImageError] = useState(false);
@@ -63,14 +71,31 @@ export function CocktailCard({
       </div>
 
       {/* Content on right - about 2/3 width */}
-      <div className="flex flex-1 flex-col justify-between gap-2 overflow-hidden">
+      <div className="flex flex-1 flex-col justify-between gap-2">
         <div className="flex flex-col gap-2 min-h-0">
-          {/* Title */}
-          <h3 className="text-xl font-semibold text-white sm:text-2xl">{cocktail.name}</h3>
+          {/* Title with optional score badge */}
+          <div className="flex items-start justify-between gap-2 shrink-0">
+            <h3 className="text-xl font-semibold text-white sm:text-2xl flex-1 min-w-0">{cocktail.name}</h3>
+            {score !== undefined && breakdown && (
+              <ScoreTooltip
+                score={score}
+                breakdown={breakdown}
+                isManual={isManual}
+              >
+                <div className={`cursor-pointer shrink-0 rounded-full backdrop-blur-sm px-3 py-1.5 text-xs font-semibold ring-2 shadow-lg transition-all duration-200 whitespace-nowrap ${
+                  isManual
+                    ? "bg-amber-500/30 text-amber-100 ring-amber-500/50 hover:bg-amber-500/40 hover:ring-amber-500/70 active:bg-amber-500/50"
+                    : "bg-amber-400/20 text-amber-200 ring-amber-400/30 hover:bg-amber-400/30 hover:ring-amber-400/50 active:bg-amber-400/40"
+                }`}>
+                  {isManual ? "🏆" : `${score} pts`}
+                </div>
+              </ScoreTooltip>
+            )}
+          </div>
 
           {/* Ingredients list */}
           {cocktail.ingredients.length > 0 && (
-            <ul className="flex flex-col gap-0.5 overflow-hidden">
+            <ul className="flex flex-col gap-0.5 overflow-hidden flex-1 min-h-0">
               {visibleIngredients.map((ingredient, idx) => (
                 <li key={idx} className="text-xs text-zinc-300 leading-tight">
                   {ingredient}
