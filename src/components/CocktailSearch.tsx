@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { SlidersHorizontal } from "lucide-react";
-import { useState, useRef, useEffect, useMemo, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { getCocktails, type Cocktail } from "@/lib/google-sheets";
 
 export function CocktailSearch({ 
@@ -24,6 +24,7 @@ export function CocktailSearch({
   // Initialize search query from URL parameter when URL changes
   useEffect(() => {
     const queryParam = searchParams.get("q") || "";
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSearchQuery(queryParam);
   }, [searchParams]);
 

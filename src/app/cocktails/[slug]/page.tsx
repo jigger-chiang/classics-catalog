@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { getCocktailBySlug, getCocktails } from "@/lib/google-sheets";
+import { getCocktails } from "@/lib/google-sheets";
 import { getHybridRecommendations } from "@/lib/recommendation";
 import { CocktailCard } from "@/components/CocktailCard";
 import { CocktailDetailImage } from "@/components/CocktailDetailImage";

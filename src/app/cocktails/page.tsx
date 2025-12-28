@@ -17,7 +17,8 @@ export default async function CocktailsPage({
 }: {
   searchParams?: SearchParams;
 }) {
-  const params = await Promise.resolve(searchParams ?? {});
+  const resolvedSearchParams = searchParams instanceof Promise ? await searchParams : (searchParams ?? {});
+  const params = resolvedSearchParams;
 
   const filters: Filters = {
     base: toArray(params.base),

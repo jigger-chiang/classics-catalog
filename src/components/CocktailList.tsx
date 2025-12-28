@@ -67,6 +67,7 @@ export function CocktailList({ cocktails }: CocktailListProps) {
 
   // Reset visible count when cocktails list changes (e.g., filter applied)
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setVisibleCount(INITIAL_COCKTAIL_COUNT);
     isLoadingRef.current = false;
     setIsLoading(false);

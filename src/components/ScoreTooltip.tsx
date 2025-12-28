@@ -50,7 +50,7 @@ export function ScoreTooltip({ score, breakdown, isManual, children }: ScoreTool
             // Manual recommendation: Show special "Bartender's Choice" message
             <div className="text-center py-2">
               <div className="text-2xl mb-1">🏆</div>
-              <div className="font-semibold text-amber-300">Bartender's Choice</div>
+              <div className="font-semibold text-amber-300">Bartender&apos;s Choice</div>
               <div className="text-xs text-zinc-400 mt-1">Classic Pairing</div>
             </div>
           ) : (

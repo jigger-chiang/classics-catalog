@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Filter, X } from "lucide-react";
+import { X } from "lucide-react";
 
 export type Filters = {
   base?: string[];
@@ -44,7 +44,9 @@ export default function FilterModal({
     ingredients: initial.ingredients || [],
   });
 
+  // Sync draft with initial prop changes
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setDraft({
       base: initial.base || [],
       body: initial.body || [],
@@ -53,13 +55,6 @@ export default function FilterModal({
     });
   }, [initial]);
 
-  const hasActiveFilters = useMemo(
-    () =>
-      Object.values(draft).some(
-        (value) => Array.isArray(value) && value.length > 0,
-      ),
-    [draft],
-  );
 
   const applyFilters = () => {
     const params = new URLSearchParams();

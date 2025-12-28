@@ -13,7 +13,7 @@ export function NavBarAutocomplete() {
 
   const getPageTitle = () => {
     if (pathname === "/mode") {
-      return { icon: Compass, text: "Mode", subtitle: "Choose the vibe, we'll pour the list." };
+      return { icon: Compass, text: "Vibe", subtitle: "Choose the vibe, we'll pour the list." };
     }
     if (pathname === "/cocktails") {
       return { icon: Sparkles, text: "Cocktail List" };
@@ -91,7 +91,7 @@ export function NavBarAutocomplete() {
                 onClick={() => handleMenuClick("/mode")}
                 className="w-full px-4 py-2.5 text-left text-sm text-amber-100 transition-all duration-200 ease-in-out first:rounded-t-2xl last:rounded-b-2xl hover:bg-amber-100/10"
               >
-                Mode
+                Vibe
               </button>
             </div>
           )}

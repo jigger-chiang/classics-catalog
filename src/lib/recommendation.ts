@@ -73,7 +73,7 @@ const RECOMMENDATION_COUNT = 6; // Target number of recommendations
  * Step 1: The Classifier - Comprehensive ingredient family categorization
  * Normalizes input to lowercase and categorizes ingredients by flavor profile
  */
-function getIngredientFamily(ingredientName: string): FlavorFamily | string {
+export function getIngredientFamily(ingredientName: string): FlavorFamily | string {
   const normalized = ingredientName.toLowerCase().trim();
 
   // AMARO_APERITIF (Bittersweet)

@@ -52,6 +52,7 @@ export function ScoredCocktailCard({ recommendation }: ScoredCocktailCardProps) 
       {/* Image - Square that autoscales based on available space */}
       <div style={{ width: `${IMAGE_SIZE_PERCENTAGE}%` }} className="relative aspect-square shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-zinc-900">
         {!imageError && imageSrc ? (
+          // eslint-disable-next-line @next/next/no-img-element
           <img
             src={imageSrc}
             alt={cocktail.name}
