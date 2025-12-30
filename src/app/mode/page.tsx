@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useState, useMemo, useEffect } from "react";
 import { getCocktails, type Cocktail } from "@/lib/google-sheets";
 import { getIngredientFamily } from "@/lib/recommendation";
-import { getImagePathVariations } from "@/lib/utils";
+import { getImagePathVariations, toSlug } from "@/lib/utils";
 import { Sparkles } from "lucide-react";
 import { ImageOff } from "lucide-react";
 
@@ -255,8 +255,8 @@ function VibeCard({ cocktail }: { cocktail: Cocktail }) {
   const [showFullDescription, setShowFullDescription] = useState(false);
 
   const imageCandidates = useMemo(() => {
-    return getImagePathVariations(cocktail.id, cocktail.slug);
-  }, [cocktail.id, cocktail.slug]);
+    return getImagePathVariations(cocktail.id, cocktail.slug, cocktail.name);
+  }, [cocktail.id, cocktail.slug, cocktail.name]);
 
   const imageSrc = imageCandidates.length > 0 ? imageCandidates[candidateIndex] : undefined;
 
@@ -270,7 +270,7 @@ function VibeCard({ cocktail }: { cocktail: Cocktail }) {
 
   return (
     <Link
-      href={`/cocktails/${cocktail.slug}`}
+      href={`/cocktails/${toSlug(cocktail.name)}`}
       className="group flex h-full flex-col rounded-3xl border border-white/10 bg-gradient-to-b from-zinc-900/70 to-black p-5 shadow-2xl ring-1 ring-white/10 transition-all duration-300 ease-out hover:-translate-y-1 hover:border-white/25 hover:ring-white/25 hover:shadow-xl"
     >
       {/* Image */}

@@ -11,8 +11,8 @@ export function CocktailDetailImage({ cocktail }: { cocktail: Cocktail }) {
   const [imageError, setImageError] = useState(false);
 
   const candidates = useMemo(() => {
-    return getImagePathVariations(cocktail.id, cocktail.slug);
-  }, [cocktail.id, cocktail.slug]);
+    return getImagePathVariations(cocktail.id, cocktail.slug, cocktail.name);
+  }, [cocktail.id, cocktail.slug, cocktail.name]);
 
   const imageSrc = candidates.length > 0 ? candidates[candidateIndex] : undefined;
 

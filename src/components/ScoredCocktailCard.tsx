@@ -6,6 +6,7 @@ import { CARD_HEIGHT, IMAGE_SIZE_PERCENTAGE, MAX_VISIBLE_INGREDIENTS } from "@/l
 import { ScoreTooltip } from "@/components/ScoreTooltip";
 import { ImageOff } from "lucide-react";
 import { useMemo, useState } from "react";
+import { getImagePathVariations, toSlug } from "@/lib/utils";
 
 type ScoredCocktailCardProps = {
   recommendation: ScoredRecommendation;
@@ -17,15 +18,8 @@ export function ScoredCocktailCard({ recommendation }: ScoredCocktailCardProps) 
   const [imageError, setImageError] = useState(false);
   
   const imageCandidates = useMemo(() => {
-    if (!cocktail.id || cocktail.id.length < 3) return [];
-    const idPrefix = cocktail.id.slice(0, 3);
-    const slug = cocktail.slug || "";
-    // Try both .jpg and .jpeg extensions
-    return [
-      `/cocktails/${idPrefix}-${slug}.jpg`,
-      `/cocktails/${idPrefix}-${slug}.jpeg`,
-    ];
-  }, [cocktail.id, cocktail.slug]);
+    return getImagePathVariations(cocktail.id, cocktail.slug, cocktail.name);
+  }, [cocktail.id, cocktail.slug, cocktail.name]);
   
   const imageSrc = imageCandidates.length > 0 ? imageCandidates[candidateIndex] : undefined;
 
@@ -115,7 +109,7 @@ export function ScoredCocktailCard({ recommendation }: ScoredCocktailCardProps) 
   );
 
   return (
-    <Link href={`/cocktails/${cocktail.slug}`} className="block h-full">
+    <Link href={`/cocktails/${toSlug(cocktail.name)}`} className="block h-full">
       {cardContent}
     </Link>
   );

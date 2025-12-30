@@ -14,7 +14,7 @@ export type Cocktail = {
 };
 
 import { DEFAULT_CSV_URL, FILTER_OPTIONS_CSV_URL } from "./constants";
-import { sortCocktailsByName } from "./utils";
+import { sortCocktailsByName, toSlug } from "./utils";
 
 // Cache duration: 60 seconds
 const CACHE_REVALIDATE = 60;
@@ -42,28 +42,36 @@ function parseCSV(csv: string): Cocktail[] {
 
   const cocktails = data
     .filter((row: Record<string, string>) => Object.keys(row).length > 0)
-    .map((row: Record<string, string>) => ({
-      id: row.id?.trim() ?? "",
-      name: row.name?.trim() ?? "",
-      slug: row.slug?.trim() ?? "",
-      base_spirit: row.base_spirit?.trim() ?? "",
-      ingredients: row.ingredients
-        ? row.ingredients
-            .split(",")
-            .map((item: string) => item.trim())
-            .filter(Boolean)
-        : [],
-      body_level: row.body_level?.trim() ?? "",
-      method: row.method?.trim() ?? "",
-      glassware: row.glassware?.trim() ?? "",
-      story: row.story?.trim() ?? "",
-      related_ids: row.related_ids
-        ? row.related_ids
-            .split(",")
-            .map((item: string) => item.trim())
-            .filter(Boolean)
-        : [],
-    }))
+    .map((row: Record<string, string>) => {
+      const name = row.name?.trim() ?? "";
+      const rawSlug = row.slug?.trim() ?? "";
+      // Use slug from CSV if available and not empty, otherwise generate from name
+      // This ensures we always have a valid slug for routing and image paths
+      const slug = rawSlug || toSlug(name);
+      
+      return {
+        id: row.id?.trim() ?? "",
+        name,
+        slug,
+        base_spirit: row.base_spirit?.trim() ?? "",
+        ingredients: row.ingredients
+          ? row.ingredients
+              .split(",")
+              .map((item: string) => item.trim())
+              .filter(Boolean)
+          : [],
+        body_level: row.body_level?.trim() ?? "",
+        method: row.method?.trim() ?? "",
+        glassware: row.glassware?.trim() ?? "",
+        story: row.story?.trim() ?? "",
+        related_ids: row.related_ids
+          ? row.related_ids
+              .split(",")
+              .map((item: string) => item.trim())
+              .filter(Boolean)
+          : [],
+      };
+    })
     .filter(
       (cocktail: Cocktail) => cocktail.id && cocktail.name && cocktail.slug,
     );

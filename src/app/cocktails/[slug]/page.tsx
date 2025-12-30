@@ -7,6 +7,7 @@ import { CocktailDetailImage } from "@/components/CocktailDetailImage";
 import { StickyBackHeader } from "@/components/StickyBackHeader";
 import { DetailPageScrollToTop } from "@/components/DetailPageScrollToTop";
 import { Playfair_Display } from "next/font/google";
+import { toSlug } from "@/lib/utils";
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
@@ -24,8 +25,12 @@ export default async function CocktailDetailPage({
   // Fetch all cocktails once - this is cached
   const allCocktails = await getCocktails();
   
-  // Find the cocktail from the already-fetched list to avoid duplicate fetch
-  const cocktail = allCocktails.find((c) => c.slug === slug);
+  // Find the cocktail using normalized slug comparison
+  // This handles cases where the URL slug is normalized (e.g., "vieux-carre")
+  // but the database slug might be raw (e.g., "Vieux Carré")
+  const cocktail = allCocktails.find(
+    (c) => toSlug(c.slug) === slug || toSlug(c.name) === slug
+  );
 
   if (!cocktail) {
     notFound();

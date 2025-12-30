@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useMemo, useState } from "react";
 import { CARD_HEIGHT, IMAGE_SIZE_PERCENTAGE, MAX_VISIBLE_INGREDIENTS } from "@/lib/constants";
 import { Cocktail } from "@/lib/google-sheets";
-import { getImagePathVariations } from "@/lib/utils";
+import { getImagePathVariations, toSlug } from "@/lib/utils";
 import { ImageOff } from "lucide-react";
 import { ScoreTooltip } from "@/components/ScoreTooltip";
 import { ScoreBreakdownItem } from "@/lib/recommendation";
@@ -27,8 +27,8 @@ export function CocktailCard({
   const [imageError, setImageError] = useState(false);
   
   const imageCandidates = useMemo(() => {
-    return getImagePathVariations(cocktail.id, cocktail.slug);
-  }, [cocktail.id, cocktail.slug]);
+    return getImagePathVariations(cocktail.id, cocktail.slug, cocktail.name);
+  }, [cocktail.id, cocktail.slug, cocktail.name]);
   
   const imageSrc = imageCandidates.length > 0 ? imageCandidates[candidateIndex] : undefined;
 
@@ -128,7 +128,7 @@ export function CocktailCard({
   );
 
   return (
-    <Link href={`/cocktails/${cocktail.slug}`} className="block h-full">
+    <Link href={`/cocktails/${toSlug(cocktail.name)}`} className="block h-full">
       {cardContent}
     </Link>
   );

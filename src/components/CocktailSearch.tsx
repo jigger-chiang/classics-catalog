@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { SlidersHorizontal } from "lucide-react";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { getCocktails, type Cocktail } from "@/lib/google-sheets";
+import { toSlug } from "@/lib/utils";
 
 export function CocktailSearch({ 
   cocktails: initialCocktails,
@@ -108,7 +109,7 @@ export function CocktailSearch({
                 key={cocktail.id}
                 type="button"
                 className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm transition-all duration-200 ease-in-out first:rounded-t-2xl last:rounded-b-2xl hover:bg-amber-100/10"
-                onClick={() => handleSelect(cocktail.slug)}
+                onClick={() => handleSelect(toSlug(cocktail.name))}
               >
                 <span className="truncate font-medium text-amber-100">{cocktail.name}</span>
                 <span className="ml-auto truncate text-xs text-zinc-300">
