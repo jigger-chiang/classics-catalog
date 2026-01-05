@@ -29,10 +29,8 @@ export function ScoredCocktailCard({ recommendation }: ScoredCocktailCardProps) 
     cocktail.base_spirit,
   ].filter(Boolean);
 
-  // If ingredients >= MAX_VISIBLE_INGREDIENTS, show only first (MAX-1) and replace the rest with "..."
-  const hasMoreIngredients = cocktail.ingredients.length >= MAX_VISIBLE_INGREDIENTS;
-  const visibleCount = hasMoreIngredients ? MAX_VISIBLE_INGREDIENTS - 1 : cocktail.ingredients.length;
-  const visibleIngredients = cocktail.ingredients.slice(0, visibleCount);
+  // Show exactly 3 ingredients visually with gradient fade-out if there are more
+  const hasMoreIngredients = cocktail.ingredients.length > 3;
 
   const cardContent = (
     <article style={{ height: `${CARD_HEIGHT}px` }} className="group relative flex min-w-[360px] flex-row gap-4 rounded-3xl border border-white/10 bg-gradient-to-b from-zinc-900/70 to-black p-4 shadow-2xl ring-1 ring-white/10 transition-all duration-300 ease-out hover:-translate-y-1 hover:border-white/25 hover:ring-white/25 hover:shadow-xl sm:p-5">
@@ -76,18 +74,18 @@ export function ScoredCocktailCard({ recommendation }: ScoredCocktailCardProps) 
 
           {/* Ingredients list */}
           {cocktail.ingredients.length > 0 && (
-            <ul className="flex flex-col gap-0.5 overflow-hidden">
-              {visibleIngredients.map((ingredient, idx) => (
-                <li key={idx} className="text-xs text-zinc-300 leading-tight">
-                  {ingredient}
-                </li>
-              ))}
+            <div className="relative h-[4.5rem] overflow-hidden">
+              <ul className="flex flex-col gap-0.5">
+                {cocktail.ingredients.map((ingredient, idx) => (
+                  <li key={idx} className="text-xs text-zinc-300 leading-tight">
+                    {ingredient}
+                  </li>
+                ))}
+              </ul>
               {hasMoreIngredients && (
-                <li className="text-xs text-zinc-400 leading-tight italic">
-                  ...
-                </li>
+                <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-black to-transparent pointer-events-none" />
               )}
-            </ul>
+            </div>
           )}
         </div>
 

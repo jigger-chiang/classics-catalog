@@ -260,8 +260,6 @@ function VibeCard({ cocktail }: { cocktail: Cocktail }) {
 
   const imageSrc = imageCandidates.length > 0 ? imageCandidates[candidateIndex] : undefined;
 
-  // Top 3 ingredients
-  const topIngredients = cocktail.ingredients.slice(0, 3);
 
   // Description text
   const description = cocktail.story || "";
@@ -302,24 +300,23 @@ function VibeCard({ cocktail }: { cocktail: Cocktail }) {
         <h3 className="text-xl font-semibold text-white">{cocktail.name}</h3>
 
         {/* Ingredients Section - Fixed height with gradient mask */}
-        <div className="relative h-[6rem] overflow-hidden">
-          <div>
-            {topIngredients.length > 0 ? (
-              <ul className="flex flex-col gap-1">
-                {topIngredients.map((ingredient, idx) => (
-                  <li key={idx} className="flex items-center gap-2 text-sm text-zinc-300">
-                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-amber-200" />
-                    {ingredient}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-sm text-zinc-400">No ingredients listed</p>
+        {cocktail.ingredients.length > 0 ? (
+          <div className="relative h-24 overflow-hidden mb-4">
+            <ul className="flex flex-col gap-1">
+              {cocktail.ingredients.map((ingredient, idx) => (
+                <li key={idx} className="flex items-center gap-2 text-sm text-zinc-300">
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-amber-200" />
+                  {ingredient}
+                </li>
+              ))}
+            </ul>
+            {cocktail.ingredients.length > 3 && (
+              <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-black via-black/80 to-transparent pointer-events-none z-10" />
             )}
           </div>
-          {/* Gradient mask for fade-out effect */}
-          <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-black via-black/80 to-transparent" />
-        </div>
+        ) : (
+          <p className="text-sm text-zinc-400 mb-4">No ingredients listed</p>
+        )}
 
         {/* Description - Line clamped to 3 lines */}
         {description && (
