@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, usePathname } from "next/navigation";
-import { Compass, Menu, Sparkles } from "lucide-react";
+import { Dices, Martini, Menu } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 
 export function NavBarAutocomplete() {
@@ -13,10 +13,10 @@ export function NavBarAutocomplete() {
 
   const getPageTitle = () => {
     if (pathname === "/mode") {
-      return { icon: Compass, text: "Vibe", subtitle: "Choose the vibe, we'll pour the list." };
+      return { icon: Dices, text: "Vibe", subtitle: "Choose the vibe, we'll pour the list." };
     }
     if (pathname === "/cocktails") {
-      return { icon: Sparkles, text: "Cocktail List" };
+      return { icon: Martini, text: "Cocktail List" };
     }
     return null;
   };

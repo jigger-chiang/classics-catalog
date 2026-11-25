@@ -7,8 +7,7 @@ import { useIsOverflowing } from "@/lib/useIsOverflowing";
 import { getCocktails, type Cocktail } from "@/lib/google-sheets";
 import { getIngredientFamily } from "@/lib/recommendation";
 import { getImagePathVariations, toSlug } from "@/lib/utils";
-import { Sparkles } from "lucide-react";
-import { ImageOff } from "lucide-react";
+import { Dices, Martini } from "lucide-react";
 
 type Intensity = "Light" | "Medium" | "Heavy" | "Any";
 type FlavorProfile = "Fizzy" | "Sour/Sweet" | "Bittersweet" | "Any";
@@ -119,7 +118,7 @@ export default function ModePage() {
         <div className="mx-auto flex max-w-5xl flex-col gap-10">
           <header className="flex flex-col gap-3">
             <div className="flex items-center gap-2">
-              <Sparkles className="h-6 w-6 text-amber-200" />
+              <Dices className="h-6 w-6 text-amber-200" />
               <h1 className="text-3xl font-bold text-white">Vibe Check</h1>
             </div>
             <p className="max-w-2xl text-lg text-zinc-300">
@@ -296,7 +295,7 @@ function VibeCard({ cocktail }: { cocktail: Cocktail }) {
           />
         ) : (
           <div className="flex h-full items-center justify-center gap-2 bg-gradient-to-br from-zinc-900 to-black text-sm text-zinc-400">
-            <ImageOff className="h-6 w-6 text-zinc-500" />
+            <Martini className="h-6 w-6 text-zinc-500" />
           </div>
         )}
       </div>

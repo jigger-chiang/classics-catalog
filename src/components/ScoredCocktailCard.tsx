@@ -4,7 +4,7 @@ import Link from "next/link";
 import { ScoredRecommendation } from "@/lib/recommendation";
 import { CARD_HEIGHT, IMAGE_SIZE_PERCENTAGE, MAX_VISIBLE_INGREDIENTS } from "@/lib/constants";
 import { ScoreTooltip } from "@/components/ScoreTooltip";
-import { ImageOff } from "lucide-react";
+import { Martini } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import { useIsOverflowing } from "@/lib/useIsOverflowing";
 import { getImagePathVariations, toSlug } from "@/lib/utils";
@@ -63,7 +63,7 @@ export function ScoredCocktailCard({ recommendation }: ScoredCocktailCardProps) 
           />
         ) : (
           <div className="flex h-full items-center justify-center gap-2 bg-gradient-to-br from-zinc-900 to-black text-sm text-zinc-400">
-            <ImageOff className="h-4 w-4 text-zinc-500" />
+            <Martini className="h-4 w-4 text-zinc-500" />
           </div>
         )}
       </div>

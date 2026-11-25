@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useState, useMemo } from "react";
 import { Cocktail } from "@/lib/google-sheets";
 import { getImagePathVariations } from "@/lib/utils";
-import { ImageOff } from "lucide-react";
+import { Martini } from "lucide-react";
 
 export function CocktailDetailImage({ cocktail }: { cocktail: Cocktail }) {
   const [candidateIndex, setCandidateIndex] = useState(0);
@@ -36,7 +36,7 @@ export function CocktailDetailImage({ cocktail }: { cocktail: Cocktail }) {
         />
       ) : (
         <div className="flex h-full items-center justify-center gap-2 bg-gradient-to-br from-zinc-900 to-black text-sm text-zinc-400">
-          <ImageOff className="h-6 w-6 text-zinc-500" />
+          <Martini className="h-6 w-6 text-zinc-500" />
           <span>Image unavailable</span>
         </div>
       )}

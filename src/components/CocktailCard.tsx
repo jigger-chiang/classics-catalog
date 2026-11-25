@@ -7,7 +7,7 @@ import { useIsOverflowing } from "@/lib/useIsOverflowing";
 import { CARD_HEIGHT, IMAGE_SIZE_PERCENTAGE, MAX_VISIBLE_INGREDIENTS } from "@/lib/constants";
 import { Cocktail } from "@/lib/google-sheets";
 import { getImagePathVariations, toSlug } from "@/lib/utils";
-import { ImageOff } from "lucide-react";
+import { Martini } from "lucide-react";
 import { ScoreTooltip } from "@/components/ScoreTooltip";
 import { ScoreBreakdownItem } from "@/lib/recommendation";
 
@@ -65,7 +65,7 @@ export function CocktailCard({
           />
         ) : (
           <div className="flex h-full items-center justify-center gap-2 bg-gradient-to-br from-zinc-900 to-black text-sm text-zinc-400">
-            <ImageOff className="h-4 w-4 text-zinc-500" />
+            <Martini className="h-4 w-4 text-zinc-500" />
           </div>
         )}
       </div>
