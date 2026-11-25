@@ -8,7 +8,8 @@ import {
   getFilterOptions,
 } from "@/lib/google-sheets";
 import { toArray, toString } from "@/lib/utils";
-import { Frown, Info, X } from "lucide-react";
+import { Info, X } from "lucide-react";
+import { EmptyGlassQuestion } from "@/components/icons/EmptyGlassQuestion";
 import Link from "next/link";
 import type { SearchParams } from "@/types";
 
@@ -79,7 +80,7 @@ export default async function CocktailsPage({
 
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center gap-3 rounded-3xl border border-white/10 bg-white/5 p-10 text-center text-zinc-300">
-            <Frown className="h-8 w-8 text-amber-200" />
+            <EmptyGlassQuestion className="h-8 w-8 text-amber-200" />
             <p className="text-lg font-semibold text-white">No cocktails found</p>
             <p className="text-sm text-zinc-400">
               Try adjusting your filters or clearing the search.
