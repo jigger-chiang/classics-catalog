@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
+import { useIsOverflowing } from "@/lib/useIsOverflowing";
 import { getCocktails, type Cocktail } from "@/lib/google-sheets";
 import { getIngredientFamily } from "@/lib/recommendation";
 import { getImagePathVariations, toSlug } from "@/lib/utils";
@@ -263,8 +264,13 @@ function VibeCard({ cocktail }: { cocktail: Cocktail }) {
 
   // Description text
   const description = cocktail.story || "";
-  // Approximate check: 3 lines at ~50 chars per line = ~150 chars
-  const isDescriptionLong = description.length > 150;
+
+  // Fade / "Read more" only when content is actually cut off
+  const ingredientsRef = useRef<HTMLDivElement>(null);
+  const hasMoreIngredients = useIsOverflowing(ingredientsRef);
+  const descriptionRef = useRef<HTMLParagraphElement>(null);
+  // Measure only while clamped; keep the button visible once expanded
+  const isDescriptionLong = useIsOverflowing(descriptionRef, !showFullDescription);
 
   return (
     <Link
@@ -301,7 +307,7 @@ function VibeCard({ cocktail }: { cocktail: Cocktail }) {
 
         {/* Ingredients Section - Fixed height with gradient mask */}
         {cocktail.ingredients.length > 0 ? (
-          <div className="relative h-24 overflow-hidden mb-4">
+          <div ref={ingredientsRef} className="relative h-24 overflow-hidden mb-4">
             <ul className="flex flex-col gap-1">
               {cocktail.ingredients.map((ingredient, idx) => (
                 <li key={idx} className="flex items-center gap-2 text-sm text-zinc-300">
@@ -310,7 +316,7 @@ function VibeCard({ cocktail }: { cocktail: Cocktail }) {
                 </li>
               ))}
             </ul>
-            {cocktail.ingredients.length > 3 && (
+            {hasMoreIngredients && (
               <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-black via-black/80 to-transparent pointer-events-none z-10" />
             )}
           </div>
@@ -322,6 +328,7 @@ function VibeCard({ cocktail }: { cocktail: Cocktail }) {
         {description && (
           <div className="flex-1">
             <p
+              ref={descriptionRef}
               className={`text-sm leading-relaxed text-zinc-300 ${
                 showFullDescription ? "" : "line-clamp-3"
               }`}

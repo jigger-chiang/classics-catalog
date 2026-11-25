@@ -5,7 +5,8 @@ import { ScoredRecommendation } from "@/lib/recommendation";
 import { CARD_HEIGHT, IMAGE_SIZE_PERCENTAGE, MAX_VISIBLE_INGREDIENTS } from "@/lib/constants";
 import { ScoreTooltip } from "@/components/ScoreTooltip";
 import { ImageOff } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import { useIsOverflowing } from "@/lib/useIsOverflowing";
 import { getImagePathVariations, toSlug } from "@/lib/utils";
 
 type ScoredCocktailCardProps = {
@@ -29,8 +30,9 @@ export function ScoredCocktailCard({ recommendation }: ScoredCocktailCardProps) 
     cocktail.base_spirit,
   ].filter(Boolean);
 
-  // Show exactly 3 ingredients visually with gradient fade-out if there are more
-  const hasMoreIngredients = cocktail.ingredients.length > 3;
+  // Ingredients fill whatever space the card has left; fade only if they actually overflow
+  const ingredientsRef = useRef<HTMLDivElement>(null);
+  const hasMoreIngredients = useIsOverflowing(ingredientsRef);
 
   const cardContent = (
     <article style={{ height: `${CARD_HEIGHT}px` }} className="group relative flex min-w-[360px] flex-row gap-4 rounded-3xl border border-white/10 bg-gradient-to-b from-zinc-900/70 to-black p-4 shadow-2xl ring-1 ring-white/10 transition-all duration-300 ease-out hover:-translate-y-1 hover:border-white/25 hover:ring-white/25 hover:shadow-xl sm:p-5">
@@ -68,13 +70,13 @@ export function ScoredCocktailCard({ recommendation }: ScoredCocktailCardProps) 
 
       {/* Content on right - about 2/3 width */}
       <div className="flex flex-1 flex-col justify-between gap-2 overflow-hidden">
-        <div className="flex flex-col gap-2 min-h-0">
+        <div className="flex min-h-0 flex-1 flex-col gap-2">
           {/* Title */}
           <h3 className="text-xl font-semibold text-white sm:text-2xl">{cocktail.name}</h3>
 
           {/* Ingredients list */}
           {cocktail.ingredients.length > 0 && (
-            <div className="relative h-[4.5rem] overflow-hidden">
+            <div ref={ingredientsRef} className="relative min-h-0 flex-1 overflow-hidden">
               <ul className="flex flex-col gap-0.5">
                 {cocktail.ingredients.map((ingredient, idx) => (
                   <li key={idx} className="text-xs text-zinc-300 leading-tight">
