@@ -1,7 +1,6 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { SlidersHorizontal } from "lucide-react";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { getCocktails, type Cocktail } from "@/lib/google-sheets";
 import { toSlug } from "@/lib/utils";
@@ -78,14 +77,20 @@ export function CocktailSearch({
 
 
   return (
-    <form autoComplete="off" onSubmit={handleSearch} className="relative">
-      <div className="relative">
+    <form autoComplete="off" onSubmit={handleSearch} role="search" className="relative">
+      <div className="flex h-12 items-center gap-3 border-b border-gold/55">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="shrink-0 text-muted" aria-hidden="true">
+          <circle cx="11" cy="11" r="7" />
+          <path d="m20 20-4-4" />
+        </svg>
+        <label htmlFor="cocktail-search" className="sr-only">Search cocktails or ingredients</label>
         <input
+          id="cocktail-search"
           type="text"
           value={searchQuery}
           onChange={handleInputChange}
-          placeholder="Find A Cocktail"
-          className="w-full rounded-full border border-white/10 bg-white/5 px-5 py-3 pr-12 text-sm text-white placeholder:text-zinc-400 transition-all duration-200 ease-in-out focus:border-amber-300/50 focus:outline-none focus:ring-2 focus:ring-amber-300/30 focus:bg-white/10"
+          placeholder="Search cocktails or ingredients"
+          className="min-w-0 flex-1 bg-transparent font-serif text-[17px] text-ivory placeholder:text-dim focus:outline-none"
           onFocus={() => { if (searchQuery) setShowSuggestions(true); }}
         />
         <button
@@ -94,33 +99,34 @@ export function CocktailSearch({
             e.preventDefault();
             onFilterClick?.();
           }}
-          className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-2 text-amber-200 transition-all duration-200 ease-in-out hover:bg-white/10 hover:scale-110"
+          className="flex h-11 w-11 shrink-0 items-center justify-end text-gold transition-colors hover:text-gold-light"
           aria-label="Filter"
         >
-          <SlidersHorizontal className="h-4 w-4" />
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+            <path d="M4 6h16M7 12h10M10 18h4" />
+          </svg>
         </button>
-        {showSuggestions && suggestions.length > 0 && (
-          <div
-            ref={suggestionBox}
-            className="absolute left-0 right-0 z-50 mt-2 max-h-64 overflow-auto rounded-2xl border border-amber-100/20 bg-zinc-950 py-2 shadow-xl backdrop-blur-sm"
-          >
-            {suggestions.map((cocktail) => (
-              <button
-                key={cocktail.id}
-                type="button"
-                className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm transition-all duration-200 ease-in-out first:rounded-t-2xl last:rounded-b-2xl hover:bg-amber-100/10"
-                onClick={() => handleSelect(toSlug(cocktail.name))}
-              >
-                <span className="truncate font-medium text-amber-100">{cocktail.name}</span>
-                <span className="ml-auto truncate text-xs text-zinc-300">
-                  {cocktail.ingredients.slice(0, 3).join(", ")}
-                </span>
-              </button>
-            ))}
-          </div>
-        )}
       </div>
+      {showSuggestions && suggestions.length > 0 && (
+        <div
+          ref={suggestionBox}
+          className="absolute left-0 right-0 z-40 mt-1 max-h-72 overflow-auto border border-gold/30 bg-panel py-1"
+        >
+          {suggestions.map((cocktail) => (
+            <button
+              key={cocktail.id}
+              type="button"
+              className="flex w-full items-baseline gap-3 px-4 py-2.5 text-left transition-colors hover:bg-gold/10"
+              onClick={() => handleSelect(toSlug(cocktail.name))}
+            >
+              <span className="truncate font-serif text-lg text-ivory">{cocktail.name}</span>
+              <span className="ml-auto truncate font-serif text-sm text-muted">
+                {cocktail.ingredients.slice(0, 3).join(" · ")}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
     </form>
   );
 }
-

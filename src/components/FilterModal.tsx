@@ -86,16 +86,17 @@ export default function FilterModal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-          <div className="relative flex h-full max-h-[90vh] w-full max-w-2xl flex-col rounded-3xl border border-white/10 bg-zinc-950 shadow-2xl sm:max-h-[85vh]">
-            <div className="flex shrink-0 items-center justify-between border-b border-white/10 p-6">
-              <div className="text-lg font-semibold text-white">Filter</div>
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/75 p-4" role="dialog" aria-modal="true" aria-labelledby="filter-title">
+          <div className="relative flex h-full max-h-[90vh] w-full max-w-2xl flex-col border border-gold/30 bg-panel sm:max-h-[85vh]">
+            <div className="flex shrink-0 items-center justify-between border-b border-gold/30 px-6 py-4">
+              <h2 id="filter-title" className="font-serif text-3xl italic text-ivory">Filter</h2>
               <button
                 type="button"
                 onClick={() => onOpenChange(false)}
-                className="rounded-full p-1 text-zinc-300 transition hover:bg-white/10 hover:text-white"
+                aria-label="Close"
+                className="flex h-11 w-11 items-center justify-end text-muted transition-colors hover:text-gold"
               >
-                <X className="h-5 w-5" />
+                <X className="h-5 w-5" strokeWidth={1.25} />
               </button>
             </div>
 
@@ -107,21 +108,21 @@ export default function FilterModal({
                 onChange={(base) => setDraft((d) => ({ ...d, base }))}
                 options={filterOptions.base_spirit}
               />
-              <div className="h-px bg-white/10" />
+              <div className="h-px bg-gold/20" />
               <FilterButtonGroup
                 label="Body Level"
                 values={draft.body || []}
                 onChange={(body) => setDraft((d) => ({ ...d, body }))}
                 options={filterOptions.body_level}
               />
-              <div className="h-px bg-white/10" />
+              <div className="h-px bg-gold/20" />
               <FilterButtonGroup
                 label="Method"
                 values={draft.method || []}
                 onChange={(method) => setDraft((d) => ({ ...d, method }))}
                 options={filterOptions.method}
               />
-              <div className="h-px bg-white/10" />
+              <div className="h-px bg-gold/20" />
               <IngredientsSelector
                 values={draft.ingredients || []}
                 onChange={(ingredients) =>
@@ -132,28 +133,28 @@ export default function FilterModal({
               </div>
             </div>
 
-            <div className="flex shrink-0 items-center justify-between border-t border-white/10 p-6">
+            <div className="flex shrink-0 items-center justify-between border-t border-gold/30 px-6 py-4">
               <button
                 type="button"
                 onClick={clearFilters}
-                className="text-sm text-zinc-400 underline underline-offset-4 transition hover:text-white"
+                className="text-[11px] tracking-[0.2em] text-muted transition-colors hover:text-ivory"
               >
-                Clear all
+                CLEAR ALL
               </button>
               <div className="flex items-center gap-3">
                 <button
                   type="button"
                   onClick={() => onOpenChange(false)}
-                  className="rounded-full border border-white/10 bg-white/5 px-5 py-2.5 text-sm font-medium text-white transition-all duration-200 ease-in-out hover:border-white/30 hover:bg-white/10 hover:scale-105"
+                  className="h-11 px-4 text-[11px] tracking-[0.2em] text-muted transition-colors hover:text-ivory"
                 >
-                  Cancel
+                  CANCEL
                 </button>
                 <button
                   type="button"
                   onClick={applyFilters}
-                  className="rounded-full bg-white px-5 py-2.5 text-sm font-medium text-black transition-all duration-200 ease-in-out hover:bg-zinc-100 hover:scale-105 hover:shadow-lg"
+                  className="h-11 border border-gold px-6 text-[11px] tracking-[0.2em] text-gold transition-colors hover:bg-gold/10 hover:text-gold-light"
                 >
-                  Apply
+                  APPLY
                 </button>
               </div>
             </div>
@@ -185,7 +186,7 @@ function FilterButtonGroup({
 
   return (
     <div>
-      <span className="mb-3 block text-sm font-medium text-white">{label}</span>
+      <span className="mb-3 block text-[10px] tracking-[0.22em] text-dim">{label.toUpperCase()}</span>
       <div className="flex flex-wrap gap-2">
         {options.map((option) => {
           const isSelected = values.includes(option);
@@ -194,10 +195,11 @@ function FilterButtonGroup({
               key={option}
               type="button"
               onClick={() => toggleOption(option)}
-              className={`rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 ease-in-out ${
+              aria-pressed={isSelected}
+              className={`min-h-10 border px-4 py-2 font-serif text-[17px] transition-colors ${
                 isSelected
-                  ? "bg-zinc-700 text-white shadow-md"
-                  : "bg-white/5 text-zinc-300 hover:bg-white/10 hover:text-white hover:scale-105"
+                  ? "border-gold text-gold"
+                  : "border-ivory/15 text-ivory hover:border-gold/55"
               }`}
             >
               {option}
@@ -265,16 +267,16 @@ function IngredientsSelector({
 
   return (
     <div>
-      <span className="mb-3 block text-sm font-medium text-white">
-        Ingredients
+      <span className="mb-3 block text-[10px] tracking-[0.22em] text-dim">
+        INGREDIENTS
       </span>
       <div className="relative" ref={dropdownRef}>
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
-          className="flex w-full items-center justify-between rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-left text-sm text-white"
+          className="flex h-11 w-full items-center justify-between border-b border-gold/55 text-left font-serif text-[17px] text-muted"
         >
-          <span>Select</span>
+          <span>Select ingredients</span>
           <svg
             className={`h-4 w-4 transition-transform ${isOpen ? "rotate-180" : ""}`}
             fill="none"
@@ -290,15 +292,15 @@ function IngredientsSelector({
           </svg>
         </button>
         {isOpen && (
-          <div className="absolute z-50 mt-2 w-full overflow-hidden rounded-2xl border border-white/10 bg-zinc-950 shadow-xl backdrop-blur-sm">
-            <div className="border-b border-white/10 p-2">
+          <div className="absolute z-50 mt-1 w-full overflow-hidden border border-gold/30 bg-ink">
+            <div className="border-b border-gold/20 px-3">
               <input
                 ref={inputRef}
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search ingredients..."
-                className="w-full rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-zinc-400 transition-all duration-200 ease-in-out focus:border-white/30 focus:outline-none focus:ring-2 focus:ring-white/30 focus:bg-white/10"
+                className="h-11 w-full bg-transparent font-serif text-[16px] text-ivory placeholder:text-dim focus:outline-none"
                 onClick={(e) => e.stopPropagation()}
               />
             </div>
@@ -309,13 +311,13 @@ function IngredientsSelector({
                     key={option}
                     type="button"
                     onClick={() => handleSelect(option)}
-                    className="w-full px-4 py-2.5 text-left text-sm text-white transition-all duration-200 ease-in-out first:rounded-t-2xl last:rounded-b-2xl hover:bg-white/10"
+                    className="w-full px-4 py-2.5 text-left font-serif text-[17px] text-ivory transition-colors hover:bg-gold/10"
                   >
                     {option}
                   </button>
                 ))
               ) : (
-                <div className="px-3 py-2 text-sm text-zinc-400">
+                <div className="px-4 py-2.5 text-sm text-muted">
                   No ingredients found
                 </div>
               )}
@@ -328,15 +330,16 @@ function IngredientsSelector({
           {values.map((ingredient) => (
             <span
               key={ingredient}
-              className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm text-white transition-all duration-200 ease-in-out hover:bg-white/20 hover:scale-105"
+              className="inline-flex items-center gap-2 border border-gold px-3 py-1.5 font-serif text-[17px] text-gold"
             >
               {ingredient}
               <button
                 type="button"
                 onClick={() => handleRemove(ingredient)}
-                className="rounded-full p-0.5 transition-all duration-200 ease-in-out hover:bg-white/30 hover:scale-110"
+                aria-label={`Remove ${ingredient}`}
+                className="text-gold/70 transition-colors hover:text-gold-light"
               >
-                <X className="h-3 w-3" />
+                <X className="h-3.5 w-3.5" />
               </button>
             </span>
           ))}

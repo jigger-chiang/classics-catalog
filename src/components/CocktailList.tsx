@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from "react";
-import CocktailCard from "./CocktailCard";
+import { CocktailCard } from "./CocktailCard";
 import { INITIAL_COCKTAIL_COUNT, COCKTAILS_PER_PAGE } from "@/lib/constants";
 import { Cocktail } from "@/lib/google-sheets";
 import { Loader2 } from "lucide-react";
@@ -79,12 +79,12 @@ export function CocktailList({ cocktails }: CocktailListProps) {
 
   return (
     <>
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+      <div className="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 lg:grid-cols-4">
         {visibleCocktails.map((cocktail, index) => (
-          <CocktailCard 
-            key={cocktail.id} 
-            cocktail={cocktail} 
-            priority={index < 2}
+          <CocktailCard
+            key={cocktail.id}
+            cocktail={cocktail}
+            priority={index < 4}
           />
         ))}
       </div>
@@ -97,7 +97,7 @@ export function CocktailList({ cocktails }: CocktailListProps) {
       {/* Loading spinner */}
       {isLoading && hasMore && (
         <div className="mt-8 flex justify-center">
-          <Loader2 className="h-6 w-6 animate-spin text-amber-200" />
+          <Loader2 className="h-5 w-5 animate-spin text-gold" strokeWidth={1.5} />
         </div>
       )}
     </>

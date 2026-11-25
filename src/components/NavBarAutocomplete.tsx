@@ -1,8 +1,14 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { Dices, Martini, Menu } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+
+const MENU_ITEMS = [
+  { path: "/", label: "Home" },
+  { path: "/cocktails", label: "Cocktail List" },
+  { path: "/mode", label: "Vibe" },
+];
 
 export function NavBarAutocomplete() {
   const router = useRouter();
@@ -11,24 +17,11 @@ export function NavBarAutocomplete() {
   const menuBox = useRef<HTMLDivElement>(null);
   const menuButton = useRef<HTMLButtonElement>(null);
 
-  const getPageTitle = () => {
-    if (pathname === "/mode") {
-      return { icon: Dices, text: "Vibe", subtitle: "Choose the vibe, we'll pour the list." };
-    }
-    if (pathname === "/cocktails") {
-      return { icon: Martini, text: "Cocktail List" };
-    }
-    return null;
-  };
-
-  const pageInfo = getPageTitle();
-
   useEffect(() => {
     if (!showMenu) return;
     const onClick = (e: MouseEvent) => {
       const target = e.target as Node;
       if (
-        showMenu &&
         menuBox.current &&
         !menuBox.current.contains(target) &&
         menuButton.current &&
@@ -41,78 +34,64 @@ export function NavBarAutocomplete() {
     return () => document.removeEventListener("mousedown", onClick);
   }, [showMenu]);
 
-  const toggleMenu = () => {
-    setShowMenu(!showMenu);
-  };
-
   const handleMenuClick = (path: string) => {
     setShowMenu(false);
     router.push(path);
   };
 
-  // Hide on home page and cocktail detail pages (only show on list page and mode page)
+  // Hidden on the home page and on cocktail detail pages (they have their own header)
   if (pathname === "/" || (pathname?.startsWith("/cocktails/") && pathname !== "/cocktails")) {
     return null;
   }
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-white/10 bg-zinc-950/95 backdrop-blur-sm">
-      <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3 sm:px-6">
+    <nav className="sticky top-0 z-50 bg-ink/95 backdrop-blur-sm">
+      <div className="relative mx-auto flex h-14 max-w-5xl items-center justify-between px-1.5 sm:px-4">
         <div className="relative">
           <button
             ref={menuButton}
-            onClick={toggleMenu}
-            className="flex items-center justify-center rounded-full p-2 text-amber-100 transition-all duration-200 ease-in-out hover:bg-white/10 hover:scale-110"
+            onClick={() => setShowMenu(!showMenu)}
+            className="flex h-11 w-11 items-center justify-center text-ivory transition-colors hover:text-gold"
             aria-label="Menu"
+            aria-expanded={showMenu}
           >
-            <Menu className="h-5 w-5" />
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.25" aria-hidden="true">
+              <path d="M4 8h16M4 16h16" />
+            </svg>
           </button>
           {showMenu && (
             <div
               ref={menuBox}
-              className="absolute left-0 top-full z-50 mt-2 flex min-w-fit flex-col whitespace-nowrap rounded-2xl border border-amber-100/20 bg-zinc-950 py-2 shadow-xl backdrop-blur-sm"
+              className="absolute left-1.5 top-full z-50 mt-1 flex min-w-44 flex-col border border-gold/30 bg-panel py-1"
             >
-              <button
-                type="button"
-                onClick={() => handleMenuClick("/")}
-                className="w-full px-4 py-2.5 text-left text-sm text-amber-100 transition-all duration-200 ease-in-out first:rounded-t-2xl last:rounded-b-2xl hover:bg-amber-100/10"
-              >
-                Home
-              </button>
-              <button
-                type="button"
-                onClick={() => handleMenuClick("/cocktails")}
-                className="w-full px-4 py-2.5 text-left text-sm text-amber-100 transition-all duration-200 ease-in-out first:rounded-t-2xl last:rounded-b-2xl hover:bg-amber-100/10"
-              >
-                Cocktail List
-              </button>
-              <button
-                type="button"
-                onClick={() => handleMenuClick("/mode")}
-                className="w-full px-4 py-2.5 text-left text-sm text-amber-100 transition-all duration-200 ease-in-out first:rounded-t-2xl last:rounded-b-2xl hover:bg-amber-100/10"
-              >
-                Vibe
-              </button>
+              {MENU_ITEMS.map((item) => {
+                const active = pathname === item.path;
+                return (
+                  <button
+                    key={item.path}
+                    type="button"
+                    onClick={() => handleMenuClick(item.path)}
+                    className={`px-5 py-3 text-left font-serif text-lg transition-colors hover:text-gold ${
+                      active ? "text-gold" : "text-ivory"
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                );
+              })}
             </div>
           )}
         </div>
-        {pageInfo && (
-          <div className="flex items-center gap-2">
-            {pageInfo.icon && (
-              <pageInfo.icon className="h-4 w-4 text-amber-200" />
-            )}
-            <div className="flex flex-col">
-              <span className="text-sm font-semibold text-amber-100 uppercase tracking-wider">
-                {pageInfo.text}
-              </span>
-              {pageInfo.subtitle && (
-                <span className="text-xs text-zinc-400">{pageInfo.subtitle}</span>
-              )}
-            </div>
-          </div>
-        )}
+
+        <Link
+          href="/"
+          className="absolute left-1/2 -translate-x-1/2 whitespace-nowrap font-serif text-[15px] font-semibold tracking-[0.3em] text-ivory transition-colors hover:text-gold"
+        >
+          COCKTAIL CLASSICS
+        </Link>
+
+        <span className="h-11 w-11" aria-hidden="true" />
       </div>
     </nav>
   );
 }
-

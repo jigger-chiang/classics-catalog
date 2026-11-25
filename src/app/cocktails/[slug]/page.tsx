@@ -6,14 +6,10 @@ import { CocktailCard } from "@/components/CocktailCard";
 import { CocktailDetailImage } from "@/components/CocktailDetailImage";
 import { StickyBackHeader } from "@/components/StickyBackHeader";
 import { DetailPageScrollToTop } from "@/components/DetailPageScrollToTop";
-import { Playfair_Display } from "next/font/google";
+import { StoryText } from "@/components/StoryText";
 import { toSlug } from "@/lib/utils";
 
-const playfair = Playfair_Display({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-playfair",
-});
+const sectionTitle = "mb-3 font-serif text-[28px] font-normal italic leading-tight text-ivory";
 
 export default async function CocktailDetailPage({
   params,
@@ -21,10 +17,10 @@ export default async function CocktailDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  
+
   // Fetch all cocktails once - this is cached
   const allCocktails = await getCocktails();
-  
+
   // Find the cocktail using normalized slug comparison
   // This handles cases where the URL slug is normalized (e.g., "vieux-carre")
   // but the database slug might be raw (e.g., "Vieux Carré")
@@ -43,97 +39,90 @@ export default async function CocktailDetailPage({
     cocktail.related_ids,
   );
 
+  const eyebrow = [cocktail.base_spirit, cocktail.method, cocktail.glassware].filter(Boolean).join(" · ");
+  const specs = [
+    { label: "BASE", value: cocktail.base_spirit },
+    { label: "METHOD", value: cocktail.method },
+    { label: "GLASS", value: cocktail.glassware },
+    { label: "BODY", value: cocktail.body_level },
+  ];
+
   return (
-    <div
-      className={`${playfair.variable} min-h-screen bg-black text-amber-100`}
-    >
+    <div className="min-h-screen bg-ink text-ivory">
       <DetailPageScrollToTop />
-      <StickyBackHeader />
-      <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:py-10">
-        {/* Breadcrumbs */}
-        <nav className="mb-4 flex items-center gap-2 text-xs text-zinc-400">
-          <Link
-            href="/cocktails"
-            className="transition-colors hover:text-white"
-          >
-            Cocktails
-          </Link>
-          <span className="text-zinc-600">/</span>
-          <span className="text-zinc-300">{cocktail.name}</span>
-        </nav>
+      <StickyBackHeader label={cocktail.id ? `No. ${cocktail.id}` : undefined} />
 
-        <h1
-          className="mb-6 text-4xl font-semibold text-amber-100 sm:text-5xl lg:mb-8"
-          style={{ fontFamily: "var(--font-playfair)" }}
-        >
-          {cocktail.name}
-        </h1>
+      <main className="mx-auto max-w-5xl px-6 pb-16 sm:px-8">
+        <section className="flex flex-col items-center pt-[18px] text-center">
+          {eyebrow && <span className="text-[11px] uppercase tracking-[0.26em] text-gold">{eyebrow}</span>}
+          <h1 className="mt-2.5 font-serif text-[60px] font-medium leading-none sm:text-7xl">{cocktail.name}</h1>
+        </section>
 
-        <div className="mb-8 flex flex-col gap-6 lg:mb-12 lg:flex-row lg:gap-8">
-          <div className="flex-1">
-            <CocktailDetailImage cocktail={cocktail} />
-          </div>
+        <div className="mt-6 lg:mt-10 lg:grid lg:grid-cols-2 lg:items-start lg:gap-12">
+          <CocktailDetailImage cocktail={cocktail} />
 
-          <div className="flex-1 lg:flex lg:flex-col lg:justify-start">
+          <div>
+            <dl className="mt-[30px] grid grid-cols-2 border-t border-gold/28 lg:mt-0">
+              {specs.map((spec, i) => (
+                <div
+                  key={spec.label}
+                  className={`border-b border-gold/28 py-3.5 ${i % 2 === 0 ? "border-r pr-3" : "pl-[18px]"}`}
+                >
+                  <dt className="text-[10px] tracking-[0.22em] text-dim">{spec.label}</dt>
+                  <dd className="mt-1 font-serif text-[21px]">{spec.value || "—"}</dd>
+                </div>
+              ))}
+            </dl>
+
             {cocktail.ingredients.length > 0 && (
-              <div className="mb-6">
-                <h2 className="mb-4 text-lg font-semibold text-amber-100">
-                  Ingredients
-                </h2>
-                <ul className="flex flex-col gap-2">
+              <section className="mt-[42px]">
+                <h2 className={sectionTitle}>Ingredients</h2>
+                <ul className="border-b border-gold/28">
                   {cocktail.ingredients.map((ingredient, idx) => {
                     const ingredientTrimmed = ingredient.trim();
                     const normalizedIngredient = ingredientTrimmed.toLowerCase();
                     const normalizedBaseSpirit = cocktail.base_spirit.toLowerCase().trim();
-                    
+
                     // Smart Linking Logic: Check if ingredient is the base spirit
-                    const isBaseSpirit = normalizedIngredient === normalizedBaseSpirit || 
+                    const isBaseSpirit = normalizedIngredient === normalizedBaseSpirit ||
                                         normalizedIngredient.includes(normalizedBaseSpirit) ||
                                         normalizedBaseSpirit.includes(normalizedIngredient);
-                    
+
                     // Case A: Base Spirit -> use base filter
                     // Case B: Regular Ingredient -> use ingredients filter
                     const filterUrl = isBaseSpirit
                       ? `/cocktails?base=${encodeURIComponent(ingredientTrimmed)}`
                       : `/cocktails?ingredients=${encodeURIComponent(ingredientTrimmed)}`;
-                    
+
                     return (
-                      <li
-                        key={idx}
-                        className="flex items-center gap-3 text-base text-amber-100/90"
-                      >
-                        <span className="h-2 w-2 shrink-0 rounded-full bg-amber-200" />
+                      <li key={idx} className="border-t border-gold/28">
                         <Link
                           href={filterUrl}
-                          className="transition-colors hover:text-amber-300 hover:underline cursor-pointer"
+                          className="group flex min-h-10 items-center justify-between font-serif text-base text-ivory transition-colors hover:text-gold"
                         >
                           {ingredient}
+                          <span className="text-[15px] text-gold transition-transform group-hover:translate-x-0.5" aria-hidden="true">›</span>
                         </Link>
                       </li>
                     );
                   })}
                 </ul>
-              </div>
+              </section>
             )}
+
             {cocktail.story && (
-              <div>
-                <p className="whitespace-pre-line text-base leading-relaxed text-amber-100/90 sm:text-lg">
-                  {cocktail.story}
-                </p>
-              </div>
+              <section className="mt-[42px]">
+                <h2 className={sectionTitle}>The Story</h2>
+                <StoryText story={cocktail.story} />
+              </section>
             )}
           </div>
         </div>
 
         {recommendations.length > 0 && (
-          <section className="mt-12 border-t border-white/10 pt-8">
-            <h2
-              className="mb-6 text-2xl font-semibold text-amber-100 sm:text-3xl"
-              style={{ fontFamily: "var(--font-playfair)" }}
-            >
-              Recommends
-            </h2>
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <section className="mt-10 lg:mt-16">
+            <h2 className={`${sectionTitle} mb-3.5`}>You May Also Like</h2>
+            <div className="-mx-1 grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 lg:grid-cols-4">
               {recommendations.map((recommendation) => {
                 const isManual = recommendation.isManual || recommendation.breakdown.some((item) => item.reason === "Bartender's Choice");
                 return (
@@ -153,4 +142,3 @@ export default async function CocktailDetailPage({
     </div>
   );
 }
-

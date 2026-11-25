@@ -1,37 +1,61 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
+/*
+ * Cocktail Classics — black, ivory and gold.
+ * Thin gold lines instead of shadows, gradients and big rounded corners.
+ */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-ink: #0d0d0c;
+  --color-panel: #161513;
+  --color-ivory: #eee8da;
+  --color-muted: #a39c8d;
+  --color-dim: #7e786c;
+  --color-gold: #c7a66b;
+  --color-gold-light: #e3cc9a;
+
+  --font-serif: var(--font-cormorant), "Times New Roman", serif;
+  --font-sans: var(--font-inter), system-ui, -apple-system, sans-serif;
+  --font-tc: var(--font-noto-serif-tc), "Songti TC", serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+:root {
+  color-scheme: dark;
 }
 
 body {
-  background: radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.08), transparent 25%),
-    radial-gradient(circle at 80% 0%, rgba(236, 72, 153, 0.08), transparent 25%),
-    var(--background);
-  color: var(--foreground);
-  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  background: #0d0d0c;
+  color: #eee8da;
+  font-family: var(--font-sans);
+}
+
+::selection {
+  background: rgba(199, 166, 107, 0.35);
 }
 
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #6366f1, #ec4899);
-  border-radius: 9999px;
+  background: rgba(199, 166, 107, 0.35);
+}
+
+/* Arch-shaped photo frame used by every cocktail card */
+.arch-frame {
+  border-radius: 9999px 9999px 0 0;
+  aspect-ratio: 149 / 181;
+}
+
+/* Fixed two-line ingredient box; a third line fades out in the bottom quarter */
+.ingredient-fade {
+  -webkit-mask-image: linear-gradient(to bottom, #000 75%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 75%, transparent 100%);
+}
+
+/* Hide horizontal scrollbar on the base-spirit tabs */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }

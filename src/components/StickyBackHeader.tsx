@@ -1,32 +1,35 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { ChevronLeft } from "lucide-react";
 
 /**
- * Sticky back button header for cocktail detail page
- * Uses glassmorphism effect and router.back() for history navigation
+ * Detail page header: back on the left, the cocktail's number in the middle.
+ * Goes back in history when there is one, otherwise to the list.
  */
-export function StickyBackHeader() {
+export function StickyBackHeader({ label }: { label?: string }) {
   const router = useRouter();
 
   const handleBack = () => {
-    router.back();
+    if (window.history.length > 1) router.back();
+    else router.push("/cocktails");
   };
 
   return (
-    <header className="sticky top-0 z-50 border-b border-white/10 bg-black/30 backdrop-blur-md">
-      <div className="mx-auto flex max-w-6xl items-center px-4 py-3 sm:px-6">
+    <header className="sticky top-0 z-50 bg-ink/95 backdrop-blur-sm">
+      <div className="relative mx-auto flex h-14 max-w-5xl items-center px-1.5 sm:px-4">
         <button
           onClick={handleBack}
-          className="flex items-center gap-2 rounded-full px-4 py-2 text-amber-100 transition-all duration-200 ease-in-out hover:bg-white/10 hover:scale-110"
+          className="flex h-11 w-11 items-center justify-center text-ivory transition-colors hover:text-gold"
           aria-label="Go back"
         >
-          <ChevronLeft className="h-6 w-6" />
-          <span>Back</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.25" aria-hidden="true">
+            <path d="M15 5l-7 7 7 7" />
+          </svg>
         </button>
+        {label && (
+          <span className="absolute left-1/2 -translate-x-1/2 font-serif text-[17px] italic text-gold">{label}</span>
+        )}
       </div>
     </header>
   );
 }
-
