@@ -3,10 +3,10 @@
 import { useRouter } from "next/navigation";
 
 /**
- * Detail page header: back on the left, the cocktail's number in the middle.
+ * Detail page header: back on the left, the cocktail's number and name in the middle.
  * Goes back in history when there is one, otherwise to the list.
  */
-export function StickyBackHeader({ label }: { label?: string }) {
+export function StickyBackHeader({ number, name }: { number?: string; name?: string }) {
   const router = useRouter();
 
   const handleBack = () => {
@@ -26,8 +26,11 @@ export function StickyBackHeader({ label }: { label?: string }) {
             <path d="M15 5l-7 7 7 7" />
           </svg>
         </button>
-        {label && (
-          <span className="absolute left-1/2 -translate-x-1/2 font-serif text-[17px] italic text-gold">{label}</span>
+        {(number || name) && (
+          <div className="absolute left-1/2 flex max-w-[calc(100%-112px)] -translate-x-1/2 items-baseline gap-2 whitespace-nowrap font-serif">
+            {number && <span className="shrink-0 text-[15px] italic text-gold">No. {number}</span>}
+            {name && <span className="truncate text-[17px] font-medium text-ivory">{name}</span>}
+          </div>
         )}
       </div>
     </header>

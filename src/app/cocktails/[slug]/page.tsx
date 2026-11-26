@@ -50,7 +50,7 @@ export default async function CocktailDetailPage({
   return (
     <div className="min-h-screen bg-ink text-ivory">
       <DetailPageScrollToTop />
-      <StickyBackHeader label={cocktail.id ? `No. ${cocktail.id}` : undefined} />
+      <StickyBackHeader number={cocktail.id || undefined} name={cocktail.name} />
 
       <main className="mx-auto max-w-5xl px-6 pb-16 sm:px-8">
         <section className="flex flex-col items-center pt-[18px] text-center">
