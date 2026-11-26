@@ -3,10 +3,11 @@ import Link from "next/link";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-ink text-ivory">
+    <div className="min-h-screen bg-black text-ivory">
       <main className="mx-auto flex min-h-screen max-w-5xl flex-col items-center justify-center gap-10 px-6 py-12 sm:px-8 lg:flex-row lg:justify-between lg:gap-16">
-        <div className="w-full max-w-[420px] border border-gold/55 p-[5px] lg:order-2 lg:max-w-[480px] lg:flex-1">
-          <div className="relative aspect-square w-full overflow-hidden">
+        <div className="w-full max-w-[460px] lg:order-2 lg:max-w-[560px] lg:flex-1">
+          {/* No frame: the photo's dark edges melt into the black page */}
+          <div className="hero-fade relative aspect-square w-full overflow-hidden">
             <Image
               src="/hero-cocktail.jpg"
               alt="Cocktail glass"
