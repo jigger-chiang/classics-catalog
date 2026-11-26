@@ -70,7 +70,7 @@ export function ScoreTooltip({ score, breakdown, isManual }: ScoreTooltipProps) 
         }}
         aria-expanded={open}
         aria-label={isManualRecommendation ? "Bartender's Choice — details" : `${score} points — score breakdown`}
-        className="flex h-[30px] w-[30px] items-center justify-center rounded-full border border-gold/55 bg-ink font-serif text-[13px] font-semibold leading-none text-gold transition-colors hover:border-gold"
+        className="flex h-[30px] w-[30px] items-center justify-center rounded-full border border-gold/55 bg-ink font-serif text-[13px] font-semibold leading-none text-gold lining-nums tabular-nums transition-colors hover:border-gold"
       >
         {isManualRecommendation ? <TrophyIcon size={13} /> : score}
       </button>
