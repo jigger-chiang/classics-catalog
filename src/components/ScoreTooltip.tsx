@@ -18,7 +18,18 @@ function TrophyIcon({ size }: { size: number }) {
   );
 }
 
-const TOOLTIP_WIDTH = 214;
+const TOOLTIP_MAX_WIDTH = 340;
+const EDGE_GAP = 12;
+
+/** "Common Family Match: ORANGE_LIQUEUR" -> "Common Family Match: Orange Liqueur" */
+function readableReason(reason: string) {
+  return reason.replace(/\b[A-Z]+(?:_[A-Z]+)+\b|\b[A-Z]{4,}\b/g, (code) =>
+    code
+      .split("_")
+      .map((w) => w.charAt(0) + w.slice(1).toLowerCase())
+      .join(" "),
+  );
+}
 
 /**
  * Small circle sitting on the arch frame (score, or a trophy for a
@@ -26,15 +37,21 @@ const TOOLTIP_WIDTH = 214;
  */
 export function ScoreTooltip({ score, breakdown, isManual }: ScoreTooltipProps) {
   const [open, setOpen] = useState(false);
-  const [alignRight, setAlignRight] = useState(false);
+  const [offset, setOffset] = useState(0);
+  const [width, setWidth] = useState(TOOLTIP_MAX_WIDTH);
   const wrapper = useRef<HTMLDivElement>(null);
 
   const isManualRecommendation = isManual || breakdown.some((item) => item.reason === "Bartender's Choice");
 
-  // Open towards whichever side has room, so it never runs off a phone screen
+  // Start under the circle, then slide left just enough to stay on screen
   const show = () => {
     const rect = wrapper.current?.getBoundingClientRect();
-    if (rect) setAlignRight(rect.left + TOOLTIP_WIDTH > window.innerWidth - 12);
+    if (rect) {
+      const w = Math.min(TOOLTIP_MAX_WIDTH, window.innerWidth - EDGE_GAP * 2);
+      const overflow = rect.left + w - (window.innerWidth - EDGE_GAP);
+      setWidth(w);
+      setOffset(overflow > 0 ? -overflow : 0);
+    }
     setOpen(true);
   };
 
@@ -78,33 +95,31 @@ export function ScoreTooltip({ score, breakdown, isManual }: ScoreTooltipProps) 
       {open && (
         <div
           role="tooltip"
-          style={{ width: TOOLTIP_WIDTH }}
-          className={`absolute top-[calc(100%+6px)] z-30 border border-gold/55 bg-panel p-3.5 text-left font-sans ${
-            alignRight ? "right-0" : "left-0"
-          }`}
+          style={{ width, left: offset }}
+          className="absolute top-[calc(100%+6px)] z-30 border border-gold/55 bg-panel px-4 py-3.5 text-left font-serif lining-nums tabular-nums"
         >
           {isManualRecommendation ? (
             <div className="flex flex-col items-center gap-1.5 py-1 text-gold">
               <TrophyIcon size={22} />
               <span className="font-serif text-[19px] text-ivory">Bartender&apos;s Choice</span>
-              <span className="text-[11px] text-muted">Classic Pairing</span>
+              <span className="text-[15px] italic text-muted">Classic Pairing</span>
             </div>
           ) : (
             <>
-              <div className="mb-2 text-[10px] tracking-[0.2em] text-dim">SCORE BREAKDOWN</div>
+              <div className="mb-2 font-sans text-[10px] tracking-[0.2em] text-dim">SCORE BREAKDOWN</div>
               <ul>
                 {breakdown.map((item, index) => (
-                  <li key={index} className="flex justify-between gap-2.5 py-[3px] text-[11px] leading-[1.45]">
-                    <span className="text-muted">{item.reason}</span>
-                    <span className={`shrink-0 ${item.points >= 0 ? "text-gold" : "text-[#c98a7e]"}`}>
+                  <li key={index} className="flex items-baseline justify-between gap-4 py-[3px] text-[15px] leading-snug">
+                    <span className="text-pretty text-ivory/85">{readableReason(item.reason)}</span>
+                    <span className={`shrink-0 font-semibold lining-nums tabular-nums ${item.points >= 0 ? "text-gold" : "text-[#c98a7e]"}`}>
                       {item.points >= 0 ? `+${item.points}` : item.points}
                     </span>
                   </li>
                 ))}
               </ul>
-              <div className="mt-2 flex justify-between border-t border-gold/30 pt-2 text-xs font-medium">
-                <span className="text-ivory">Total</span>
-                <span className="text-gold">{score} pts</span>
+              <div className="mt-2 flex items-baseline justify-between border-t border-gold/30 pt-2">
+                <span className="text-[17px] italic text-ivory">Total</span>
+                <span className="text-[17px] font-semibold text-gold lining-nums tabular-nums">{score} pts</span>
               </div>
             </>
           )}
